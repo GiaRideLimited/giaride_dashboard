@@ -189,12 +189,12 @@ const AdminDashboard = () => {
         </div>
 
         {/* Main Content Display */}
-        <div className="flex-grow  sm:p-6 md:p-8"> {/* Added padding here */}
+        <div className="flex-grow sm:p-6 md:p-8 md:pt-0"> 
           {renderContent()}
         </div>
       </div>
       {/* --- Content Area End --- */}
-    </div>
+    </div> 
   );
 };
 

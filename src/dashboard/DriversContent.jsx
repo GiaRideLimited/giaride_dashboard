@@ -68,7 +68,6 @@ const DriversContent = () => {
     }, []);
 
 
-    // console.log("Data:", data);
 
 
     const entityTypeForModal = "Driver";

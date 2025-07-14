@@ -1,5 +1,5 @@
 // src/components/TransactionsContent.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiArrowUp, FiArrowDown } from 'react-icons/fi'; // For stats cards
 import { TbFilter } from 'react-icons/tb'; // For table filter
 import { BsThreeDotsVertical } from 'react-icons/bs'; // For table action menu
@@ -11,7 +11,9 @@ const TodayTag = () => (
   </span>
 );
 
-// Sample data for the transactions table
+
+
+
 const transactionsTableData = [
   { id: 't1', no: '01', reference: '6465', user: 'Alex Noman', userImg: 'https://randomuser.me/api/portraits/men/32.jpg', userType: 'Driver', amount: '$40', type: 'Fund', charges: '$1.44', date: '12-09-2024', time: '12:00pm' },
   { id: 't2', no: '02', reference: '5665', user: 'Razib Rahman', userImg: 'https://randomuser.me/api/portraits/men/33.jpg', userType: 'Rider', amount: '$50', type: 'Drop', charges: '$0.99', date: '12-09-2024', time: '1:00pm' },
@@ -24,9 +26,60 @@ const transactionsTableData = [
 ];
 
 
-const TransactionsContent = () => {
-  const [activeTab, setActiveTab] = useState('Income'); // State for active tab in table section
 
+
+const TransactionsContent = () => {
+  const [activeTab, setActiveTab] = useState('Income');
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [transactionStats, setTransactionStats] = useState(null);
+
+  const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
+
+  useEffect(() => {
+    const endpoint = 
+    activeTab === "Income" ? (`${BASE_URL}/admin/transactions/earnings`) :(`${BASE_URL}/admin/transactions/withdrawals`);
+    fetch(endpoint)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((jsonData) => {
+        setData(jsonData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setError(err.message || "Unknown error");
+        setIsLoading(false);
+      });
+  }, [activeTab]);
+
+
+  useEffect(() => {
+    const endpoint = (`${BASE_URL}/admin/transactions/statistics`);
+    fetch(endpoint)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((jsonData) => {
+        setTransactionStats(jsonData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setError(err.message || "Unknown error");
+        setIsLoading(false);
+      });
+  }, []);
+
+console.log(data)
   const tableTabs = ['Income', 'Withdrawals'];
 
   return (
@@ -45,7 +98,7 @@ const TransactionsContent = () => {
               <TodayTag />
             </div>
             <div className="flex items-center mb-1">
-              <p className="text-2xl sm:text-3xl font-bold mr-2 sm:mr-3">$ 9460.00</p>
+              <p className="text-2xl sm:text-3xl font-bold mr-2 sm:mr-3">$ {transactionStats?.data?.income || "0"}</p>
               <span className="flex items-center text-xs sm:text-sm text-red-500 font-semibold">
                 <FiArrowDown className="mr-0.5 sm:mr-1" /> 1.5%
               </span>
@@ -63,7 +116,7 @@ const TransactionsContent = () => {
               <TodayTag />
             </div>
             <div className="flex items-center mb-1">
-              <p className="text-2xl sm:text-3xl font-bold mr-2 sm:mr-3">$ 5660.00</p>
+              <p className="text-2xl sm:text-3xl font-bold mr-2 sm:mr-3">$ {transactionStats?.data?.withdrawal || "0"}</p>
               <span className="flex items-center text-xs sm:text-sm text-green-500 font-semibold">
                 <FiArrowUp className="mr-0.5 sm:mr-1" /> 2.5%
               </span>
@@ -90,7 +143,6 @@ const TransactionsContent = () => {
               className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
             />
           </div>
-          {/* Placeholder for a potential right-side button if needed in future */}
         </div>
 
         {/* Tabs for Table */}
@@ -100,7 +152,7 @@ const TransactionsContent = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium
+                className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium cursor-pointer
                   ${activeTab === tab
                     ? 'border-gray-800 text-gray-900' // Active tab style from image (darker underline)
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -115,6 +167,7 @@ const TransactionsContent = () => {
 
         {/* Table */}
         <div className="overflow-x-auto">
+          {/* { isLoading &&  <p>Loading…</p>} */}
           <table className="w-full min-w-[1024px] text-sm text-left text-gray-600">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
@@ -131,26 +184,26 @@ const TransactionsContent = () => {
               </tr>
             </thead>
             <tbody>
-              {transactionsTableData.map((transaction) => (
-                <tr key={transaction.id} className="bg-white border-b border-[#A3A3A340] hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-900">{transaction.no}</td>
-                  <td className="px-4 py-3">
-                    <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
-                      {transaction.reference}
+              {data?.data?.data?.map((transaction) => (
+                <tr key={transaction?.id} className="bg-white border-b border-[#A3A3A340] hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-900">{transaction.id || "--"}</td>
+                  <td className="px-4 py-3 truncate max-w-[160px]">
+                    <span className=" bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
+                      {transaction?.reference || "--"}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center">
-                      <img className="w-7 h-7 rounded-full mr-2.5 object-cover" src={transaction.userImg} alt={transaction.user} />
-                      <span className="font-medium text-gray-900">{transaction.user}</span>
+                      <img className="w-7 h-7 rounded-full mr-2.5 object-cover" src={transaction?.userImg || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"} alt={transaction?.user.first_name || "--"} />
+                      <span className="font-medium text-gray-900">{transaction?.user.first_name || "--"} {transaction?.user.last_name || "--"}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3">{transaction.userType}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{transaction.amount}</td>
-                  <td className="px-4 py-3">{transaction.type}</td>
-                  <td className="px-4 py-3">{transaction.charges}</td>
-                  <td className="px-4 py-3">{transaction.date}</td>
-                  <td className="px-4 py-3">{transaction.time}</td>
+                  <td className="px-4 py-3">{transaction?.user.type || "--"}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{transaction?.amount || "--"}</td>
+                  <td className="px-4 py-3">{transaction?.payment_type || "--"}</td>
+                  <td className="px-4 py-3">{transaction?.charges}</td>
+                  <td className="px-4 py-3">{new Date(transaction.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">{new Date(transaction.created_at).toLocaleTimeString()}</td>
                   <td className="px-4 py-3 text-center">
                     <button className="text-gray-500 hover:text-gray-700">
                       <BsThreeDotsVertical size={18} />
