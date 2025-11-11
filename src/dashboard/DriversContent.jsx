@@ -30,7 +30,7 @@ const DriversContent = () => {
     useEffect(() => {
         const endpoint = (`${BASE_URL}/admin/drivers`);
         fetch(endpoint)
-            .then((response) => {
+            .then((response) => { 
                 if (!response.ok) {
                     throw new Error(`Server responded with ${response.status}`);
                 }

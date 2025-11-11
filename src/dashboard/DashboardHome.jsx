@@ -1,7 +1,5 @@
-// src/components/AdminDashboard.jsx
-import React, { useState, useEffect } from 'react'; // Added useEffect
+import React, { useState, useEffect } from 'react';
 
-// Importing necessary icons from react-icons
 import {
   BsLightningChargeFill,
   BsCalendarCheck,
@@ -9,23 +7,22 @@ import {
 import {
   RiLayoutGridFill,
   RiArrowLeftRightFill,
-  RiMenuFill,      // Hamburger icon
-  RiCloseFill,     // Close icon
+  RiMenuFill,
+  RiCloseFill,
 } from 'react-icons/ri';
 import {
   FaUserTie,
   FaUsers,
-  FaCarSide, // Added for Rides, assuming this icon
+  FaCarSide,
 } from 'react-icons/fa';
 import {
-  IoMdNotificationsOutline, // Used for sidebar and header
+  IoMdNotificationsOutline,
   IoMdSettings,
 } from 'react-icons/io';
 import { HiOutlineDocumentReport } from 'react-icons/hi';
 import { BiSupport } from 'react-icons/bi';
-import { FiSearch, FiUsers as FiPartnersIcon } from 'react-icons/fi'; // Aliased FiUsers for Partners for variety
+import { FiSearch, FiUsers as FiPartnersIcon } from 'react-icons/fi';
 
-// Import all your content components
 import DashboardContent from './DashboardContent';
 import DriversContent from './DriversContent';
 import RidersContent from './RidersContent';
@@ -35,13 +32,13 @@ import SettingsContent from './SettingsContent';
 import TransactionsContent from './TransactionsContent';
 import CarReportContent from './CarReportContent';
 import SupportContent from './SupportContent';
-import RidesContent from './RidesContent'; // Assuming you meant AllRidesContent or similar from previous
+import RidesContent from './RidesContent'; 
 import PartnersContent from './PartnersContent';
 
 
 const AdminDashboard = () => {
   const [activeItem, setActiveItem] = useState('Dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
 
   // Close sidebar when an item is clicked on mobile
   const handleNavItemClick = (itemName) => {
@@ -50,7 +47,7 @@ const AdminDashboard = () => {
       setIsSidebarOpen(false);
     }
   };
-  
+
   // Effect to handle window resize for sidebar visibility
   useEffect(() => {
     const handleResize = () => {
@@ -61,7 +58,7 @@ const AdminDashboard = () => {
       }
     };
     // Set initial state based on window size
-    handleResize(); 
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -71,15 +68,23 @@ const AdminDashboard = () => {
     { id: 'dashboard', text: 'Dashboard', icon: <RiLayoutGridFill size={18} /> },
     { id: 'drivers', text: 'Drivers', icon: <FaUserTie size={18} /> },
     { id: 'riders', text: 'Riders', icon: <FaUsers size={18} /> },
-    { id: 'rides', text: 'Rides', icon: <FaCarSide size={18} /> }, // Changed icon
+    { id: 'drop', text: 'Drop', icon: <FaUsers size={18} /> },
+    { id: 'xend', text: 'Xend', icon: <FaUsers size={18} /> },
+    { id: 'errand', text: 'Errand', icon: <FaUsers size={18} /> },
+    { id: 'car', text: 'Car Rent', icon: <FaUsers size={18} /> },
+
+    { id: 'rides', text: 'Rides', icon: <FaCarSide size={18} /> },
+
+
     { id: 'bookings', text: 'Bookings', icon: <BsCalendarCheck size={18} /> },
+    { id: 'transactions', text: 'Transactions', icon: <BsCalendarCheck size={18} /> },
+    { id: 'partners', text: 'Partners', icon: <FiPartnersIcon size={18} /> },
+    { id: 'travel', text: 'Travel Org', icon: <FiPartnersIcon size={18} /> },
     { id: 'notifications', text: 'Notifications', icon: <IoMdNotificationsOutline size={18} /> },
-    { id: 'partners', text: 'Partners', icon: <FiPartnersIcon size={18} /> }, // Changed icon
     { id: 'settings', text: 'Settings', icon: <IoMdSettings size={18} /> },
   ];
 
   const reportNavItemsData = [
-    { id: 'transactions', text: 'Transactions', icon: <RiArrowLeftRightFill size={18} /> },
     { id: 'car_report', text: 'Car Report', icon: <HiOutlineDocumentReport size={18} /> },
     { id: 'support', text: 'Support', icon: <BiSupport size={18} /> },
   ];
@@ -89,7 +94,7 @@ const AdminDashboard = () => {
       href="#"
       onClick={(e) => { e.preventDefault(); onClick(item.text); }}
       className={`flex items-center space-x-3 px-4 py-2.5 my-1 rounded-lg transition-colors duration-150 text-sm
-        ${ isActive ? 'bg-yellow-400 text-neutral-900 font-semibold' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100' }`}
+        ${isActive ? 'bg-yellow-400 text-neutral-900 font-semibold' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'}`}
     >
       {item.icon}
       <span>{item.text}</span>
@@ -118,13 +123,13 @@ const AdminDashboard = () => {
       {/* --- Sidebar Start --- */}
       {/* Mobile Overlay for Sidebar */}
       {isSidebarOpen && window.innerWidth < 768 && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
 
-      <div 
+      <div
         className={`bg-neutral-900 flex flex-col h-screen flex-shrink-0 transition-all duration-300 ease-in-out z-40
           md:w-64 md:static md:translate-x-0 
           ${isSidebarOpen ? 'w-64 translate-x-0 fixed md:static' : '-translate-x-full w-64 fixed md:static md:w-64'} 
@@ -154,14 +159,14 @@ const AdminDashboard = () => {
             </div>
             <nav className="pb-4 px-4">
               {reportNavItemsData.map((item) => (
-                <NavItem key={item.id} item={item} isActive={activeItem === item.text} onClick={handleNavItemClick}/>
+                <NavItem key={item.id} item={item} isActive={activeItem === item.text} onClick={handleNavItemClick} />
               ))}
             </nav>
           </div>
         </div>
       </div>
       {/* --- Sidebar End --- */}
-      
+
       {/* --- Content Area Start --- */}
       <div className="flex-1 bg-white flex flex-col overflow-y-auto"> {/* Changed bg to white, was neutral-100 */}
         {/* Header for Content Area */}
@@ -170,7 +175,7 @@ const AdminDashboard = () => {
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden text-gray-600 hover:text-gray-800 mr-4">
             <RiMenuFill size={24} />
           </button>
-          
+
           {/* Search Input and Notifications (aligned to right) */}
           <div className="flex items-center ml-auto"> {/* ml-auto to push to right */}
             <div className="hidden sm:flex items-center bg-gray-100 rounded-lg px-3 py-2 w-56 md:w-72 mr-4"> {/* bg-gray-100, hidden on xs */}
@@ -189,12 +194,12 @@ const AdminDashboard = () => {
         </div>
 
         {/* Main Content Display */}
-        <div className="flex-grow sm:p-6 md:p-8 md:pt-0"> 
+        <div className="flex-grow sm:p-6 md:p-8 md:pt-0">
           {renderContent()}
         </div>
       </div>
       {/* --- Content Area End --- */}
-    </div> 
+    </div>
   );
 };
 

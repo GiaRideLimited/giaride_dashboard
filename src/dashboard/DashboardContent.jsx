@@ -1,16 +1,13 @@
-// src/components/DashboardContent.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiArrowUp, FiArrowDown } from 'react-icons/fi';
-import { TbFilter } from 'react-icons/tb'; // Added for the Active Rides table filter
+import { TbFilter } from 'react-icons/tb';
 
-// Helper component for the "Today" tag
 const TodayTag = () => (
   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
     Today
   </span>
 );
 
-// Donut Chart Component (Simplified SVG)
 const DonutChart = ({ data }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   let accumulatedPercentage = 0;
@@ -48,7 +45,6 @@ const DonutChart = ({ data }) => {
   );
 };
 
-// Data for Active Rides table (can be fetched or passed as props in a real app)
 const activeRidesData = [
   {
     id: '1',
@@ -93,6 +89,55 @@ const DashboardContent = () => {
     { label: 'Pending', value: 26, color: '#EF4444', change: 'down' }, // Tailwind red-500
   ];
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
+
+  useEffect(() => {
+    const endpoint = (`${BASE_URL}/admin/active-rides?from=2025-06-19&status=start-trip`);
+    fetch(endpoint)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((jsonData) => {
+        setData(jsonData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setError(err.message || "Unknown error");
+        setIsLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    const endpoint = (`${BASE_URL}/admin/transactions/statistics`);
+    fetch(endpoint)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((jsonData) => {
+        setDashboardStats(jsonData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setError(err.message || "Unknown error");
+        setIsLoading(false);
+      });
+  }, []);
+
+  console.log('data', data)
+
+
   return (
     <div>
       {/* Todays Statistics Title */}
@@ -112,7 +157,10 @@ const DashboardContent = () => {
               <TodayTag />
             </div>
             <div className="flex items-center mb-1">
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mr-2 sm:mr-3">$ 9460.00</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mr-2 sm:mr-3">
+                $ {dashboardStats?.data?.income ?? "--"}
+              </p>
+
               <span className="flex items-center text-xs sm:text-sm text-red-500 font-semibold">
                 <FiArrowDown className="mr-0.5 sm:mr-1" /> 1.5%
               </span>
@@ -131,7 +179,8 @@ const DashboardContent = () => {
               <TodayTag />
             </div>
             <div className="flex items-center mb-1">
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mr-2 sm:mr-3">$ 5660.00</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mr-2 sm:mr-3">
+                $ {dashboardStats?.data?.withdrawal ?? "--"}</p>
               <span className="flex items-center text-xs sm:text-sm text-green-500 font-semibold">
                 <FiArrowUp className="mr-0.5 sm:mr-1" /> 2.5%
               </span>
@@ -193,14 +242,45 @@ const DashboardContent = () => {
                 <th scope="col" className="px-4 py-3 whitespace-nowrap">Driver</th>
                 <th scope="col" className="px-4 py-3 whitespace-nowrap">Status</th>
                 <th scope="col" className="px-4 py-3 whitespace-nowrap">Gender</th>
-                <th scope="col" className="px-4 py-3 whitespace-nowrap">Gender</th>
                 <th scope="col" className="px-4 py-3 whitespace-nowrap">Location</th>
                 <th scope="col" className="px-4 py-3 whitespace-nowrap">Cost</th>
                 <th scope="col" className="px-4 py-3 whitespace-nowrap text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              {activeRidesData.map((ride) => (
+              {data?.data?.data?.map((item, index) => (
+                <tr key={item.id} className="bg-white border-b border-[#A3A3A340] hover:bg-gray-50">
+                  <td className="px-4 py-3 whitespace-nowrap">{index + 1}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
+                      {item.carNo ?? "--"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center">
+                      {/* <img className="w-7 h-7 rounded-full mr-2 object-cover" src={item.driver.img } alt={item.driverName ?? ""} /> */}
+                      <img className="w-7 h-7 rounded-full mr-2 object-cover" src="https://randomuser.me/api/portraits/men/32.jpg" alt={item.driverName ?? ""} />
+                      {item.driverName}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center">
+                      {/* <span className={`w-2.5 h-2.5 rounded-full mr-2 ${item.status.color}`}></span> */}
+                      {item.status}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">{item.gender}</td>
+                  {/* <td className="px-4 py-3 whitespace-nowrap">{item.gender2}</td> */}
+                  <td className="px-4 py-3 whitespace-nowrap">{item.location}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{item.cost}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-right">
+                    <button className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-md transition-colors">
+                      Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {/* {activeRidesData.map((ride) => (
                 <tr key={ride.id} className="bg-white border-b border-[#A3A3A340] hover:bg-gray-50">
                   <td className="px-4 py-3 whitespace-nowrap">{ride.no}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -230,7 +310,7 @@ const DashboardContent = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))} */}
             </tbody>
           </table>
         </div>

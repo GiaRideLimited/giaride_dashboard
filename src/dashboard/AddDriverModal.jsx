@@ -1,4 +1,3 @@
-// src/components/AddDriverModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import {
@@ -6,7 +5,6 @@ import {
 } from 'react-icons/fi';
 import { FaCarSide, FaShippingFast, FaBusAlt } from 'react-icons/fa';
 
-// --- Modal Helper Components (ModalInputField, ModalSelectField, Stepper, ServiceTypeCard remain the same) ---
 const ModalInputField = ({ placeholder, icon, type = 'text', value, onChange, name, children, required = false }) => (
     <div className="flex items-center border border-gray-300 rounded-lg px-3.5 py-2.5 focus-within:ring-1 focus-within:ring-black focus-within:border-black">
         {icon && React.cloneElement(icon, { size: 18, className: 'text-gray-500 mr-2.5 flex-shrink-0' })}
