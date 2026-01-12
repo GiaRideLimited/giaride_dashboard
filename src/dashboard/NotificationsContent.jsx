@@ -4,8 +4,8 @@ import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd, IoMdClose } from 'react-icons/io'; // Added IoMdClose
 import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs'; // Added BsCheckCircleFill
 import { FiChevronDown, FiCheck } from 'react-icons/fi'; // Added FiCheck
+import { formatDate } from '../utils/formatDate';
 
-// Sample data for the notifications table
 const notificationsTableData = Array.from({ length: 10 }, (_, i) => ({
   id: `n${i + 1}`,
   no: `${String(i + 1).padStart(2, '0')}`,
@@ -16,7 +16,6 @@ const notificationsTableData = Array.from({ length: 10 }, (_, i) => ({
   date: '12-05-2024',
 }));
 
-// --- New Notification Modal Component ---
 const NewNotificationModal = ({ isOpen, onClose, onSubmitNotification }) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -103,18 +102,18 @@ const NewNotificationModal = ({ isOpen, onClose, onSubmitNotification }) => {
               className="flex items-center justify-between w-full px-3.5 py-3 text-sm text-left bg-transparent rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
             >
               <span className={sendTo ? "text-gray-900" : "text-gray-500"}>{displaySendToLabel}</span>
-              <FiChevronDown className={`text-gray-400 transition-transform duration-200 ${showSendToDropdown ? 'rotate-180' : ''}`} size={20}/>
+              <FiChevronDown className={`text-gray-400 transition-transform duration-200 ${showSendToDropdown ? 'rotate-180' : ''}`} size={20} />
             </button>
             {showSendToDropdown && (
               <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-md shadow-lg z-10 border border-gray-200 py-1">
                 {/* Default option for 'Send to all users' if not in sendToOptions */}
-                 <div
-                    onClick={() => { setSendTo('all_users'); setShowSendToDropdown(false); }}
-                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+                <div
+                  onClick={() => { setSendTo('all_users'); setShowSendToDropdown(false); }}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
                 >
-                    Send to all users
-                    {sendTo === 'all_users' && <div className="w-4 h-4 rounded-full border-2 border-black flex items-center justify-center"><div className="w-2 h-2 bg-black rounded-full"></div></div>}
-                    {sendTo !== 'all_users' && <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>}
+                  Send to all users
+                  {sendTo === 'all_users' && <div className="w-4 h-4 rounded-full border-2 border-black flex items-center justify-center"><div className="w-2 h-2 bg-black rounded-full"></div></div>}
+                  {sendTo !== 'all_users' && <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>}
                 </div>
                 {sendToOptions.map(opt => (
                   <div
@@ -142,32 +141,32 @@ const NewNotificationModal = ({ isOpen, onClose, onSubmitNotification }) => {
 
 // --- Success Modal Component ---
 const SuccessModal = ({ isOpen, onClose, message }) => {
-    const modalContentRef = useRef(null);
-    useEffect(() => {
-        const handleClickOutside = (event) => { if (modalContentRef.current && !modalContentRef.current.contains(event.target)) { onClose(); } };
-        if (isOpen) { document.addEventListener('mousedown', handleClickOutside); }
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen, onClose]);
+  const modalContentRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => { if (modalContentRef.current && !modalContentRef.current.contains(event.target)) { onClose(); } };
+    if (isOpen) { document.addEventListener('mousedown', handleClickOutside); }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
 
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-            <div ref={modalContentRef} className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-sm text-center relative">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"> <IoMdClose size={20} /> </button>
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-5">
-                    <FiCheck className="h-8 w-8 text-green-600" strokeWidth={3}/>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Notification sent</h3>
-                <p className="text-sm text-gray-600 mb-6">{message}</p>
-                <button
-                    onClick={onClose}
-                    className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors"
-                >
-                    Okay
-                </button>
-            </div>
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div ref={modalContentRef} className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-sm text-center relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"> <IoMdClose size={20} /> </button>
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-5">
+          <FiCheck className="h-8 w-8 text-green-600" strokeWidth={3} />
         </div>
-    );
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Notification sent</h3>
+        <p className="text-sm text-gray-600 mb-6">{message}</p>
+        <button
+          onClick={onClose}
+          className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors"
+        >
+          Okay
+        </button>
+      </div>
+    </div>
+  );
 };
 // --- End Success Modal Component ---
 
@@ -178,15 +177,45 @@ const NotificationsContent = () => {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+
+
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
+
+
+  useEffect(() => {
+    const endpoint = (`${BASE_URL}/admin/notification`);
+    fetch(endpoint)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((jsonData) => {
+        setData(jsonData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setError(err.message || "Unknown error");
+        setIsLoading(false);
+      });
+  }, []);
+
+  console.log('data', data)
+
   const tabs = ['All Notifications', 'Account activation', 'Ride assignment', 'Document verification'];
 
   const handleNewNotificationSubmit = (notificationData) => {
     console.log("New Notification Submitted:", notificationData);
-    // In a real app, send data to backend, then on success:
     setSuccessMessage(`You have successfully sent a notification to ${notificationData.sendTo === 'all_users' ? 'all users' : notificationData.sendTo.replace(/_/g, ' ')}`);
     setIsNewNotificationModalOpen(false); // Close the form modal
     setIsSuccessModalOpen(true);        // Open the success modal
-    
+
     // Add to local table for demo purposes
     const newNotificationEntry = {
       id: `n${notificationsTableData.length + 1}`,
@@ -195,10 +224,10 @@ const NotificationsContent = () => {
       preview: notificationData.message.substring(0, 30) + (notificationData.message.length > 30 ? '...' : ''),
       targetAudience: notificationData.sendTo === 'all_users' ? 'All users' : notificationData.sendTo.replace(/_/g, ' '),
       status: 'Sent',
-      date: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit', year:'numeric' }).replace(/\//g, '-'),
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'),
     };
     // This is not ideal for real apps, manage state properly with a global store or context/reducers
-    notificationsTableData.unshift(newNotificationEntry); 
+    notificationsTableData.unshift(newNotificationEntry);
   };
 
   return (
@@ -213,7 +242,7 @@ const NotificationsContent = () => {
               className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
             />
           </div>
-          <button 
+          <button
             onClick={() => setIsNewNotificationModalOpen(true)}
             className="bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-semibold px-4 py-2.5 rounded-full flex items-center justify-center w-full sm:w-auto transition-colors" /* rounded-full as per image */
           >
@@ -236,8 +265,21 @@ const NotificationsContent = () => {
               <tr> <th scope="col" className="px-4 py-3">No.</th> <th scope="col" className="px-4 py-3">Title</th> <th scope="col" className="px-4 py-3">Preview</th> <th scope="col" className="px-4 py-3">Target/Audience</th> <th scope="col" className="px-4 py-3">Status</th> <th scope="col" className="px-4 py-3">Date</th> <th scope="col" className="px-4 py-3 text-center">Action</th> </tr>
             </thead>
             <tbody>
-              {notificationsTableData.map((notification) => (
-                <tr key={notification.id} className="bg-white border-b border-gray-200 hover:bg-gray-50"> {/* Adjusted border */}
+              {/* data.data.data[0].title */}
+              {data?.data?.data?.data.map((notification, index) => (
+                <tr key={notification.id} className="bg-white border-b border-gray-200 hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-900">{index + 1}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{notification.title ?? "--"}</td>
+                  <td className="px-4 py-3">{notification.content ?? "--"}</td>
+                  <td className="px-4 py-3">{notification.targetAudience ?? "--"}</td>
+                  <td className="px-4 py-3">{notification.status ?? "--"}</td>
+                  {/* <td className="px-4 py-3">{notification.date ?? "--"}</td> */}
+                  <td className="px-4 py-3">{formatDate(notification.created_at)}</td>
+                  <td className="px-4 py-3 text-center"> <button className="text-gray-500 hover:text-gray-700"> <BsThreeDotsVertical size={18} /> </button> </td>
+                </tr>
+              ))}
+              {/* {notificationsTableData.map((notification) => (
+                <tr key={notification.id} className="bg-white border-b border-gray-200 hover:bg-gray-50"> 
                   <td className="px-4 py-3 text-gray-900">{notification.no}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">{notification.title}</td>
                   <td className="px-4 py-3">{notification.preview}</td>
@@ -246,12 +288,12 @@ const NotificationsContent = () => {
                   <td className="px-4 py-3">{notification.date}</td>
                   <td className="px-4 py-3 text-center"> <button className="text-gray-500 hover:text-gray-700"> <BsThreeDotsVertical size={18} /> </button> </td>
                 </tr>
-              ))}
+              ))} */}
             </tbody>
           </table>
         </div>
       </div>
-      
+
       <NewNotificationModal
         isOpen={isNewNotificationModalOpen}
         onClose={() => setIsNewNotificationModalOpen(false)}

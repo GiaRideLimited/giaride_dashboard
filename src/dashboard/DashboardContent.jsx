@@ -45,49 +45,11 @@ const DonutChart = ({ data }) => {
   );
 };
 
-const activeRidesData = [
-  {
-    id: '1',
-    no: '01',
-    carNo: '6465',
-    driver: { name: 'Alex Noman', img: 'https://randomuser.me/api/portraits/men/32.jpg' },
-    status: { text: 'online', color: 'bg-green-500' },
-    gender1: 'Male',
-    gender2: 'Male',
-    location: 'Lagos',
-    cost: '$ 35.44',
-  },
-  {
-    id: '2',
-    no: '02',
-    carNo: '5665',
-    driver: { name: 'Razib Rahman', img: 'https://randomuser.me/api/portraits/men/33.jpg' },
-    status: { text: 'offline', color: 'bg-gray-700' },
-    gender1: 'Male',
-    gender2: 'Male',
-    location: 'Abuja',
-    cost: '$ 0.00',
-  },
-  {
-    id: '3',
-    no: '03',
-    carNo: '1755',
-    driver: { name: 'Luke Norton', img: 'https://randomuser.me/api/portraits/men/34.jpg' },
-    status: { text: 'In route', color: 'bg-red-500' },
-    gender1: 'Female',
-    gender2: 'Female',
-    location: 'Lagos',
-    cost: '$ 23.50',
-  },
-];
+
 
 
 const DashboardContent = () => {
-  const chartData = [
-    { label: 'Hired', value: 54, color: '#3B82F6', change: 'up' },    // Tailwind blue-500
-    { label: 'Canceled', value: 20, color: '#10B981', change: 'up' }, // Tailwind green-500 (color of dot in image)
-    { label: 'Pending', value: 26, color: '#EF4444', change: 'down' }, // Tailwind red-500
-  ];
+
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -116,7 +78,7 @@ const DashboardContent = () => {
   }, []);
 
   useEffect(() => {
-    const endpoint = (`${BASE_URL}/admin/transactions/statistics`);
+    const endpoint = (`${BASE_URL}/admin/dashboardStats`);
     fetch(endpoint)
       .then((response) => {
         if (!response.ok) {
@@ -135,7 +97,18 @@ const DashboardContent = () => {
       });
   }, []);
 
-  console.log('data', data)
+  // console.log('DashboardStats', dashboardStats?.data?.income.current)
+  console.log('DashboardStats', dashboardStats)
+
+
+
+  const chartData = [
+    { label: 'Hired', value: dashboardStats?.data?.rides?.hired?.current, percentage: dashboardStats?.data?.rides?.hired?.percentageChange, color: '#3B82F6', change: 'up' },
+    { label: 'Canceled', value: dashboardStats?.data?.rides?.cancelled?.current, percentage: dashboardStats?.data?.rides?.cancelled?.percentageChange, color: '#10B981', change: 'up' },
+    { label: 'Pending', value: dashboardStats?.data?.rides?.pending?.current, percentage: dashboardStats?.data?.rides?.pending?.percentageChange, color: '#EF4444', change: 'down' },
+  ];
+
+
 
 
   return (
@@ -158,14 +131,17 @@ const DashboardContent = () => {
             </div>
             <div className="flex items-center mb-1">
               <p className="text-2xl sm:text-3xl font-bold text-gray-900 mr-2 sm:mr-3">
-                $ {dashboardStats?.data?.income ?? "--"}
+                {/* $ {dashboardStats?.data?.income ?? "--"} */}
+                $ {dashboardStats?.data?.income.current ?? "--"}
               </p>
 
               <span className="flex items-center text-xs sm:text-sm text-red-500 font-semibold">
-                <FiArrowDown className="mr-0.5 sm:mr-1" /> 1.5%
+                <FiArrowDown className="mr-0.5 sm:mr-1" /> {dashboardStats?.data?.income.percentageChange ?? "--"}%
               </span>
             </div>
-            <p className="text-xs text-gray-500 mb-2 sm:mb-3">Compared to $9940 yesterday</p>
+            <p className="text-xs text-gray-500 mb-2 sm:mb-3">Compared to {" "}
+              ${dashboardStats?.data?.income.previous ?? "--"} {" "}
+              yesterday</p>
             <div className="flex justify-between text-xs text-gray-600">
               <span>Last week Income</span>
               <span className="font-medium">$25658.00</span>
@@ -180,12 +156,13 @@ const DashboardContent = () => {
             </div>
             <div className="flex items-center mb-1">
               <p className="text-2xl sm:text-3xl font-bold text-gray-900 mr-2 sm:mr-3">
-                $ {dashboardStats?.data?.withdrawal ?? "--"}</p>
+                $ {dashboardStats?.data?.withdrawal.current ?? "--"}</p>
               <span className="flex items-center text-xs sm:text-sm text-green-500 font-semibold">
-                <FiArrowUp className="mr-0.5 sm:mr-1" /> 2.5%
+                <FiArrowUp className="mr-0.5 sm:mr-1" /> {dashboardStats?.data?.withdrawal.percentageChange ?? "--"}%
               </span>
             </div>
-            <p className="text-xs text-gray-500 mb-2 sm:mb-3">Compared to $5240 yesterday</p>
+            <p className="text-xs text-gray-500 mb-2 sm:mb-3">Compared to {" "}
+              ${dashboardStats?.data?.withdrawal.previous ?? "--"} {" "} yesterday</p>
             <div className="flex justify-between text-xs text-gray-600">
               <span>Last week expences</span>
               <span className="font-medium">$22658.00</span>
@@ -201,7 +178,6 @@ const DashboardContent = () => {
             <div className="mb-3 sm:mb-4">
               <DonutChart data={chartData} />
             </div>
-            {/* MODIFIED LEGEND SECTION START */}
             <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-4 sm:gap-x-5 gap-y-1 text-xs text-gray-700">
               {chartData.map((item) => (
                 <div key={item.label} className="flex items-center">
@@ -210,7 +186,7 @@ const DashboardContent = () => {
                     style={{ backgroundColor: item.color }}
                   ></span>
                   <span className="mr-1 text-gray-600">{item.label}</span>
-                  <span className="font-semibold text-gray-800 mr-0.5">{item.value}%</span>
+                  <span className="font-semibold text-gray-800 mr-0.5">{item.percentage}%</span>
                   {item.change === 'up' ? (
                     <FiArrowUp className="text-green-500" size={14} strokeWidth={2.5} />
                   ) : (
@@ -219,7 +195,6 @@ const DashboardContent = () => {
                 </div>
               ))}
             </div>
-            {/* MODIFIED LEGEND SECTION END */}
           </div>
         </div>
       </div>

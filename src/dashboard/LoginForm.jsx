@@ -10,6 +10,7 @@ import {
   HiOutlineEyeOff,
   HiOutlineArrowSmRight
 } from 'react-icons/hi';
+import login_img from "../assets/travel-org.png"; 
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);

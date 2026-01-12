@@ -1,17 +1,14 @@
-// src/components/PartnersContent.jsx
 import React, { useState } from 'react';
-import { TbFilter } from 'react-icons/tb'; // Assuming TbFilter is available or import from react-icons/tb
-import { FiPlus } from 'react-icons/fi'; // For the "Add Partner" button
-import { BsThreeDotsVertical } from 'react-icons/bs'; // For the three-dots action menu
+import { TbFilter } from 'react-icons/tb';
+import { FiPlus } from 'react-icons/fi';
+import { BsThreeDotsVertical } from 'react-icons/bs';
 
-// Helper component for the "Today" tag on stats cards
 const TodayTag = () => (
   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
     Today
   </span>
 );
 
-// Sample data for the partners table - to match the image
 const partnersTableData = Array.from({ length: 10 }, (_, i) => ({
   id: `p${i + 1}`,
   no: `${String(i + 1).padStart(2, '0')}`,
@@ -22,20 +19,17 @@ const partnersTableData = Array.from({ length: 10 }, (_, i) => ({
 
 
 const PartnersContent = () => {
-  // For this page, there are no tabs shown in the image for the table,
-  // so activeTab state might not be needed unless filtering changes table content.
+
   // const [activeTab, setActiveTab] = useState('All'); 
 
   return (
     <div className="text-gray-800  min-h-screen font-sans">
-      {/* Partners Title & Date */}
       <div className='bg-[#F8F7F1] p-6 sm:p-8'>
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Partners</h2>
           <p className="text-xs sm:text-sm text-gray-500">Tue, 14 Nov, 2022, 11.30 AM</p>
         </div>
 
-        {/* Statistics Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {/* Total Partners Card */}
           <div className="bg-white p-5 sm:p-4 rounded-xl shadow-md flex flex-col justify-between">
@@ -70,20 +64,17 @@ const PartnersContent = () => {
         </div>
       </div>
 
-      {/* Partners Table Section */}
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
-        {/* Top Bar: Filter and Add Partner Button */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-3">
           <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 w-full md:max-w-[30%] bg-gray-50">
             <TbFilter size={18} className="text-gray-500 mr-2" />
             <input
               type="text"
-              placeholder="Filter by travel type, Gender, State" // Placeholder from image
+              placeholder="Filter by travel type, Gender, State"
               className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
             />
           </div>
           <button
-            // onClick={() => console.log('Add Partner clicked')} // Placeholder action
             className="bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-semibold px-4 py-2 rounded-[48px] flex items-center justify-center w-full sm:w-auto transition-colors"
           >
             <FiPlus size={18} className="mr-1.5" />
@@ -91,9 +82,9 @@ const PartnersContent = () => {
           </button>
         </div>
 
-        {/* Table - No tabs in this image */}
+
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[768px] text-sm text-left text-gray-600"> {/* Adjusted min-w */}
+          <table className="w-full min-w-[768px] text-sm text-left text-gray-600">
             <thead className="text-xs text-gray-500 uppercase bg-transparent">
               <tr>
                 <th scope="col" className="px-4 py-3 font-medium">No.</th>

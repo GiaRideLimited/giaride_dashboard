@@ -1,33 +1,20 @@
-// src/components/RidersContent.jsx
-import React, { useState, useEffect, useRef } from 'react'; // Added useEffect, useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd } from 'react-icons/io';
-import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs'; // Added for stepper in modal
+import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs';
 
 
-// Import the modal (assuming it's in the same directory or adjust path)
-import AddDriverModal from './AddDriverModal';
-
-// Helper component for the "Today" tag
 const TodayTag = () => (
     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
         Today
     </span>
 );
 
-const ridersTableData = [
-
-    { id: 'r1', no: '01', riderId: 'RDR-6465', name: 'Alex Noman', img: 'https://randomuser.me/api/portraits/men/32.jpg', status: 'active', statusColor: 'bg-green-500', gender: 'Male', joinDate: '10-03-2023', totalRides: '150', location: 'Lagos' },
-    { id: 'r2', no: '02', riderId: 'RDR-5665', name: 'Bella Hadid', img: 'https://randomuser.me/api/portraits/women/33.jpg', status: 'inactive', statusColor: 'bg-gray-400', gender: 'Female', joinDate: '11-04-2023', totalRides: '80', location: 'Abuja' },
-];
 
 
-
-
-const RidersContent = () => {
+const XendContent = () => {
     const [activeTab, setActiveTab] = useState('All riders');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // const [ridersData, setRidersData] = useState(ridersTableData);
     const [ridersData, setRidersData] = useState(null);
 
     const [data, setData] = useState(null);
@@ -39,7 +26,7 @@ const RidersContent = () => {
 
 
     useEffect(() => {
-        const endpoint = (`${BASE_URL}/admin/riders`);
+        const endpoint = (`${BASE_URL}/admin/rides`);
         fetch(endpoint)
             .then((response) => {
                 if (!response.ok) {
@@ -58,10 +45,9 @@ const RidersContent = () => {
             });
     }, []);
 
-    console.log("RidersContent data:", data);
 
     useEffect(() => {
-        const endpoint = (`${BASE_URL}/admin/riders-stats`);
+        const endpoint = (`${BASE_URL}/admin/total-rides-stats`);
         fetch(endpoint)
             .then((response) => {
                 if (!response.ok) {
@@ -80,39 +66,19 @@ const RidersContent = () => {
             });
     }, []);
 
+    console.log("RidersContent stats:", ridersStats);
+
+
     const entityTypeForModal = "Rider";
-    const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, 'Pending'];
+    const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, 'Ongoing', 'Completed', 'Canceled'];
 
-    const handleAddRiderSubmit = (formDataFromModal) => {
-        console.log(`New ${entityTypeForModal} Submitted:`, formDataFromModal);
-        // Create a new rider entry based on the form data
-        // Note: formDataFromModal will have driver-specific fields from AddDriverModal
-        const newRider = {
-            id: `r${ridersData.length + 1}`,
-            no: `${String(ridersData.length + 1).padStart(2, '0')}`,
-            riderId: `RDR-NEW${Date.now().toString().slice(-4)}`,
-            name: `${formDataFromModal.firstName} ${formDataFromModal.lastName}`,
-            img: 'https://via.placeholder.com/150/cccccc/808080?Text=User', // Placeholder
-            status: 'pending', // New riders might be pending
-            statusColor: 'bg-yellow-500',
-            gender: formDataFromModal.gender.charAt(0).toUpperCase() + formDataFromModal.gender.slice(1),
-            joinDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'),
-            totalRides: '0',
-            location: formDataFromModal.address.split(',').pop().trim() || 'N/A', // Attempt to get city
-        };
-        setRidersData(prevRiders => [newRider, ...prevRiders]);
-        setIsModalOpen(false); // Close the modal
-        // Optionally show a success message/modal here
-    };
-
-    console.log(data)
 
     return (
         <div className="text-gray-800 relative">
             {/* Statistics Title & Cards */}
             <div className='bg-[#F8F7F1] p-8'>
                 <div className="mb-6 sm:mb-8">
-                    <h2 className="text-xl sm:text-2xl font-semibold">{entityTypeForModal}s Statistics</h2>
+                    <h2 className="text-xl sm:text-2xl font-semibold">Today's Statistics</h2>
                     <p className="text-xs sm:text-sm text-gray-500">Tue, 14 Nov, 2022, 11.30 AM</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -122,7 +88,7 @@ const RidersContent = () => {
                             <TodayTag />
                         </div>
                         <div>
-                            <p className="text-3xl sm:text-[28px] font-bold">{ridersStats?.data?.total ?? "--"}</p>
+                            <p className="text-3xl sm:text-[28px] font-bold">{ridersStats?.data?.totalRides ?? "--"}</p>
                         </div>
                     </div>
                     <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-between">
@@ -131,7 +97,7 @@ const RidersContent = () => {
                             <TodayTag />
                         </div>
                         <div>
-                            <p className="text-3xl sm:text-[28px] font-bold">{ridersStats?.data?.active ?? "--"}</p>
+                            <p className="text-3xl sm:text-[28px] font-bold">{ridersStats?.data?.activeRides ?? "--"}</p>
                         </div>
                     </div>
                 </div>
@@ -149,13 +115,7 @@ const RidersContent = () => {
                             className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
                         />
                     </div>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-semibold px-[24px] py-[8px] rounded-full flex items-center justify-center w-full sm:w-auto transition-colors cursor-pointer"
-                    >
-                        <IoMdAdd size={20} className="mr-1.5" />
-                        Add {entityTypeForModal}s
-                    </button>
+
                 </div>
 
                 <div className=" border-b border-gray-200">
@@ -166,7 +126,7 @@ const RidersContent = () => {
                                 onClick={() => setActiveTab(tab)}
                                 className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium
                                     ${activeTab === tab
-                                        ? 'border-yellow-500 text-yellow-600' // Or your preferred active tab style
+                                        ? 'border-yellow-500 text-yellow-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
@@ -189,7 +149,7 @@ const RidersContent = () => {
                                 {/* <th scope="col" className="px-4 py-3 font-medium">Type</th> */}
                                 <th scope="col" className="px-4 py-3 font-medium">Location</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Expenditures</th>
-                                <th scope="col" className="px-4 py-3 font-medium text-center"></th> 
+                                <th scope="col" className="px-4 py-3 font-medium text-center"></th>
                             </tr>
                         </thead>
                         {data?.data?.data?.length > 0 ? (
@@ -201,11 +161,11 @@ const RidersContent = () => {
                                         <td className="px-4 py-2">
                                             <div className="flex items-center">
 
-                                                <img className="w-7 h-7 rounded-full mr-2.5 object-cover" src={driver?.photo || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"} alt={driver.first_name} />
+                                                <img className="w-7 h-7 rounded-full mr-2.5 object-cover" src={driver?.picture || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"} alt={driver.driverName} />
 
-                                                {driver.first_name || driver.last_name
-                                                    ? `${driver.first_name || ''} ${driver.last_name || ''}`
-                                                    : driver.username || 'N/A'}
+
+                                                {driver.driverName ?? '--'}
+                                                {/* {!driver.driverName == "" ? driver.driverName : '--'} */}
                                             </div>
                                         </td>
                                         <td className="px-4 py-2 capitalize">{driver.status}</td>
@@ -213,8 +173,8 @@ const RidersContent = () => {
                                         {/* <td className="px-4 py-2">
                                             {driver.premium_class || "--"}
                                         </td> */}
-                                        <td className="px-4 py-2">{driver.city || 'N/A'}</td>
-                                        <td className="px-4 py-2">₦ {driver.total_debit || 0}</td>
+                                        <td className="px-4 py-2">{driver.location || 'N/A'}</td>
+                                        <td className="px-4 py-2">₦ {driver.earnings || 0}</td>
                                         <td className="px-4 py-2 text-center">
                                             <button className="text-gray-400 hover:text-gray-600">
                                                 <BsThreeDotsVertical size={16} />
@@ -229,20 +189,14 @@ const RidersContent = () => {
                                 </tr>
                             </tbody>
                         )}
-                   
+
                     </table>
                 </div>
             </div>
 
-            {/* AddDriverModal is used here, passing "Rider" as entityType */}
-            <AddDriverModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmitBooking={handleAddRiderSubmit} // Changed prop name for clarity if modal submits booking-like data
-                entityType={entityTypeForModal}
-            />
+
         </div>
     );
 };
 
-export default RidersContent;
+export default XendContent;

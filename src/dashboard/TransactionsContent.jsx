@@ -133,7 +133,6 @@ console.log(data)
 
       {/* Transactions Table Section */}
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-        {/* Top Bar: Filter */}
         <div className="flex justify-between items-center mb-4 sm:mb-6">
           <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 w-full md:max-w-[30%]">
             <TbFilter size={20} className="text-gray-500 mr-2" />
@@ -184,9 +183,10 @@ console.log(data)
               </tr>
             </thead>
             <tbody>
-              {data?.data?.data?.map((transaction) => (
+              {data?.data?.data?.map((transaction, index) => (
                 <tr key={transaction?.id} className="bg-white border-b border-[#A3A3A340] hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-900">{transaction.id || "--"}</td>
+                  {/* <td className="px-4 py-3 text-gray-900">{transaction.id || "--"}</td> */}
+                  <td className="px-4 py-3 text-gray-900">{index + 1}</td>
                   <td className="px-4 py-3 truncate max-w-[160px]">
                     <span className=" bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
                       {transaction?.reference || "--"}

@@ -26,6 +26,7 @@ import { FiSearch, FiUsers as FiPartnersIcon } from 'react-icons/fi';
 import DashboardContent from './DashboardContent';
 import DriversContent from './DriversContent';
 import RidersContent from './RidersContent';
+import DropContent from './DropContent';
 import BookingsContent from './BookingsContent';
 import NotificationsContent from './NotificationsContent';
 import SettingsContent from './SettingsContent';
@@ -34,6 +35,10 @@ import CarReportContent from './CarReportContent';
 import SupportContent from './SupportContent';
 import RidesContent from './RidesContent'; 
 import PartnersContent from './PartnersContent';
+import XendContent from './XendContent';
+import CarRentContent from './CarRentContent';
+import ErrandContent from './ErrandContent';
+import TravelOrgContent from './TravelOrg';
 
 
 const AdminDashboard = () => {
@@ -106,6 +111,10 @@ const AdminDashboard = () => {
       case 'Dashboard': return <DashboardContent />;
       case 'Drivers': return <DriversContent />;
       case 'Riders': return <RidersContent />;
+      case 'Drop': return <DropContent />;
+      case 'Car Rent': return <CarRentContent />;
+      case 'Xend': return <XendContent />;
+      case 'Errand': return <ErrandContent />;
       case 'Bookings': return <BookingsContent />;
       case 'Notifications': return <NotificationsContent />;
       case 'Settings': return <SettingsContent />;
@@ -114,6 +123,7 @@ const AdminDashboard = () => {
       case 'Support': return <SupportContent />;
       case 'Rides': return <RidesContent />;
       case 'Partners': return <PartnersContent />;
+      case 'Travel Org': return <TravelOrgContent />;
       default: return <div>Select an item</div>;
     }
   };

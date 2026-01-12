@@ -149,7 +149,7 @@ const DriversContent = () => {
                                 <th scope="col" className="px-4 py-3 font-medium">Driver Name</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Status</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Gender</th>
-                                <th scope="col" className="px-4 py-3 font-medium">Type</th>
+                                {/* <th scope="col" className="px-4 py-3 font-medium">Type</th> */}
                                 <th scope="col" className="px-4 py-3 font-medium">Location</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Earning</th>
                                 <th scope="col" className="px-4 py-3 font-medium text-center"></th>
@@ -173,9 +173,9 @@ const DriversContent = () => {
                                         </td>
                                         <td className="px-4 py-2 capitalize">{driver.status}</td>
                                         <td className="px-4 py-2 capitalize">{driver.gender || 'N/A'}</td>
-                                        <td className="px-4 py-2">
+                                        {/* <td className="px-4 py-2">
                                             {driver.premium_class || "--"}
-                                        </td>
+                                        </td> */}
                                         <td className="px-4 py-2">{driver.city || 'N/A'}</td>
                                         <td className="px-4 py-2">₦{driver.total_credits || 0}</td>
                                         <td className="px-4 py-2 text-center">

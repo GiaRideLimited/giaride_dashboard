@@ -211,7 +211,7 @@ const RidesContent = () => {
     setIsFilterOpen(prev => !prev);
   };
 
-  console.log(data)
+  console.log("setRideStats", rideStats)
 
   return (
     <div className="text-gray-800 min-h-screen font-sans">
