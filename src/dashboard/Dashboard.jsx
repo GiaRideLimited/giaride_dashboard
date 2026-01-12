@@ -5,8 +5,8 @@ import DashboardHome from './DashboardHome'
 const Dashboard = () => {
   return (
     <div>
-        <LoginForm />
-        {/* <DashboardHome /> */}
+        {/* <LoginForm /> */}
+        <DashboardHome />
     </div>
   )
 }
