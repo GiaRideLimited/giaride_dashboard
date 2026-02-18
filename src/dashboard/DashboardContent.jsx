@@ -58,7 +58,7 @@ const DashboardContent = () => {
   const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
   useEffect(() => {
-    const endpoint = (`${BASE_URL}/admin/active-rides?from=2025-06-19&status=start-trip`);
+    const endpoint = (`${BASE_URL}/admin/active-rides?from=2025-06-19&status=start-trip`); 
     fetch(endpoint)
       .then((response) => {
         if (!response.ok) {
@@ -255,43 +255,10 @@ const DashboardContent = () => {
                   </td>
                 </tr>
               ))}
-              {/* {activeRidesData.map((ride) => (
-                <tr key={ride.id} className="bg-white border-b border-[#A3A3A340] hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap">{ride.no}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
-                      {ride.carNo}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img className="w-7 h-7 rounded-full mr-2 object-cover" src={ride.driver.img} alt={ride.driver.name} />
-                      {ride.driver.name}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className={`w-2.5 h-2.5 rounded-full mr-2 ${ride.status.color}`}></span>
-                      {ride.status.text}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">{ride.gender1}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{ride.gender2}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{ride.location}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{ride.cost}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right">
-                    <button className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-md transition-colors">
-                      Details
-                    </button>
-                  </td>
-                </tr>
-              ))} */}
             </tbody>
           </table>
         </div>
       </div>
-      {/* --- Active Rides Table Section END --- */}
-
     </div>
   );
 };
