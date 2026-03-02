@@ -21,7 +21,9 @@ import {
 } from 'react-icons/io';
 import { HiOutlineDocumentReport } from 'react-icons/hi';
 import { BiSupport } from 'react-icons/bi';
-import { FiSearch, FiUsers as FiPartnersIcon } from 'react-icons/fi';
+// import { FiSearch, FiUsers as FiPartnersIcon } from 'react-icons/fi';
+import { FiSearch, FiUsers as FiPartnersIcon, FiLogOut } from 'react-icons/fi';
+
 
 import DashboardContent from './DashboardContent';
 import DriversContent from './DriversContent';
@@ -41,7 +43,7 @@ import ErrandContent from './ErrandContent';
 import TravelOrgContent from './TravelOrg';
 
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ onLogout }) => {
   const [activeItem, setActiveItem] = useState('Dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
 
@@ -175,20 +177,23 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
-      {/* --- Sidebar End --- */}
 
       {/* --- Content Area Start --- */}
       <div className="flex-1 bg-white flex flex-col overflow-y-auto"> {/* Changed bg to white, was neutral-100 */}
         {/* Header for Content Area */}
-        <div className="flex justify-between items-center p-4 sm:p-6 md:px-8 border-b border-gray-200 md:border-none flex-shrink-0"> {/* Added border-b */}
+   
+
+        <div className="flex justify-between items-center p-4 sm:p-6 md:px-8 border-b border-gray-200 md:border-none flex-shrink-0"> 
           {/* Hamburger Menu for Mobile */}
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden text-gray-600 hover:text-gray-800 mr-4">
             <RiMenuFill size={24} />
           </button>
 
-          {/* Search Input and Notifications (aligned to right) */}
-          <div className="flex items-center ml-auto"> {/* ml-auto to push to right */}
-            <div className="hidden sm:flex items-center bg-gray-100 rounded-lg px-3 py-2 w-56 md:w-72 mr-4"> {/* bg-gray-100, hidden on xs */}
+          {/* Right Side Icons */}
+          <div className="flex items-center ml-auto"> 
+            
+            {/* Search Bar */}
+            <div className="hidden sm:flex items-center bg-gray-100 rounded-lg px-3 py-2 w-56 md:w-72 mr-4"> 
               <FiSearch className="text-gray-400 mr-2" size={18} />
               <input
                 type="text"
@@ -196,10 +201,22 @@ const AdminDashboard = () => {
                 className="text-xs sm:text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none outline-none flex-grow"
               />
             </div>
-            <div className="relative cursor-pointer">
+
+            {/* Notification Icon */}
+            <div className="relative cursor-pointer mr-6">
               <IoMdNotificationsOutline className="text-gray-500 hover:text-gray-700" size={24} sm:size={26} />
-              <span className="absolute top-0 right-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border border-white"></span> {/* Removed md specific border */}
+              <span className="absolute top-0 right-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border border-white"></span> 
             </div>
+
+            <button 
+              onClick={onLogout}
+              className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
+              title="Logout"
+            >
+              <FiLogOut size={20} />
+              <span className="hidden sm:inline text-sm font-medium">Logout</span>
+            </button>
+
           </div>
         </div>
 

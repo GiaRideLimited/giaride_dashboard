@@ -2,11 +2,11 @@ import React from 'react'
 import LoginForm from './LoginForm'
 import DashboardHome from './DashboardHome'
 
-const Dashboard = () => {
+const Dashboard = ({onLogout}) => {
   return (
     <div>
         {/* <LoginForm /> */}
-        <DashboardHome />
+        <DashboardHome onLogout={onLogout} />
     </div>
   )
 }
