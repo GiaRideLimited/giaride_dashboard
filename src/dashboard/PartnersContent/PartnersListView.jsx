@@ -4,17 +4,12 @@ import { FiPlus } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 
 
-
-// Added onAddPartner prop here
 const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState(null);
     const [partnersStats, setPartnersStats] = useState(null);
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
-
-
-
 
     const partnersTableData = Array.from({ length: 6 }, (_, i) => ({
         id: `p${i + 1}`,
@@ -32,7 +27,8 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
 
 
     useEffect(() => {
-        const endpoint = (`${BASE_URL}/admin/partner-stat`);
+        // const endpoint = (`${BASE_URL}/admin/partner-stat`);
+        const endpoint = (`${BASE_URL}/admin/partners`);
         fetch(endpoint)
             .then((response) => {
                 if (!response.ok) {
@@ -52,6 +48,7 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
     }, []);
 
     console.log("partnersStats", partnersStats)
+    console.log("partners", partnersStats)
 
     return (
         <>
@@ -110,7 +107,7 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
                                 <th scope="col" className="px-4 py-3 font-medium">No.</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Name</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Employee account</th>
-                                <th scope="col" className="px-4 py-3 font-medium">Profits made</th>
+                                <th scope="col" className="px-4 py-3 font-medium">Expenses</th>
                                 <th scope="col" className="px-4 py-3 font-medium text-center">Actions</th>
                                 <th scope="col" className="px-2 py-3 font-medium"></th>
                             </tr>
