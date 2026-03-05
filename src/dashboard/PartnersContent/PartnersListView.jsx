@@ -27,8 +27,8 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
 
 
     useEffect(() => {
-        // const endpoint = (`${BASE_URL}/admin/partner-stat`);
-        const endpoint = (`${BASE_URL}/admin/partners`);
+        const endpoint = (`${BASE_URL}/admin/partner-stat`);
+        // const endpoint = (`${BASE_URL}/admin/partners`);
         fetch(endpoint)
             .then((response) => {
                 if (!response.ok) {
