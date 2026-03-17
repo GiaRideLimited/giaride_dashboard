@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import {
-    FiChevronDown, FiMail, FiPhone, FiUser, FiTruck, FiClock, FiFileText, FiRepeat, FiMapPin, FiChevronUp
+    FiChevronDown, FiMail, FiPhone, FiUser, FiMapPin, FiCamera, FiAlertCircle
 } from 'react-icons/fi';
 import { FaCarSide, FaShippingFast, FaBusAlt } from 'react-icons/fa';
 
+// --- Modal Helper Components ---
 const ModalInputField = ({ placeholder, icon, type = 'text', value, onChange, name, children, required = false }) => (
-    <div className="flex items-center border border-gray-300 rounded-lg px-3.5 py-2.5 focus-within:ring-1 focus-within:ring-black focus-within:border-black">
-        {icon && React.cloneElement(icon, { size: 18, className: 'text-gray-500 mr-2.5 flex-shrink-0' })}
+    <div className="flex items-center border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-1 focus-within:ring-black focus-within:border-black transition-all">
+        {icon && React.cloneElement(icon, { size: 18, className: 'text-gray-400 mr-3 flex-shrink-0' })}
         {children || (
             <input
                 type={type}
@@ -16,57 +17,58 @@ const ModalInputField = ({ placeholder, icon, type = 'text', value, onChange, na
                 value={value}
                 onChange={onChange}
                 required={required}
-                className="w-full text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent"
+                className="w-full text-sm text-gray-800 placeholder-gray-400 outline-none bg-transparent"
             />
         )}
     </div>
 );
 
 const ModalSelectField = ({ placeholder, options, value, onChange, name, required = false }) => (
-    <div className="relative flex items-center border border-gray-300 rounded-lg px-3.5 py-2.5 focus-within:ring-1 focus-within:ring-black focus-within:border-black">
+    <div className="relative flex items-center border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-1 focus-within:ring-black focus-within:border-black transition-all">
         <select
             name={name}
             value={value}
             onChange={onChange}
             required={required}
-            className="w-full text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent appearance-none pr-8 cursor-pointer"
+            className="w-full text-sm text-gray-800 outline-none bg-transparent appearance-none pr-8 cursor-pointer"
         >
-            <option value="" disabled hidden>{placeholder}</option>
+            <option value="" disabled>{placeholder}</option>
             {options.map(option => (
                 <option key={option.value} value={option.value}>{option.label}</option>
             ))}
         </select>
-        <FiChevronDown size={18} className="text-gray-500 absolute right-3.5 pointer-events-none" />
+        <FiChevronDown size={18} className="text-gray-400 absolute right-4 pointer-events-none" />
     </div>
 );
 
 const Stepper = ({ steps, currentStep }) => {
     return (
-        <div className="flex items-center justify-between w-full mb-8">
+        <div className="flex items-center justify-between w-full mb-10 overflow-x-hidden">
             {steps.map((step, index) => (
                 <React.Fragment key={step.name}>
-                    <div className="flex flex-col items-center text-center">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                         <div
-                            className={`w-5 h-5 rounded-full flex items-center justify-center border-2
-                                ${currentStep > index + 1 ? 'bg-yellow-400 border-yellow-400' : ''}
-                                ${currentStep === index + 1 ? 'bg-yellow-400 border-yellow-400 animate-pulse' : ''}
-                                ${currentStep < index + 1 ? 'border-gray-300' : ''}
+                            className={`w-5 h-5 rounded-full flex items-center justify-center border-2 transition-colors
+                                ${currentStep >= index + 1 ? 'bg-yellow-400 border-yellow-400' : 'border-gray-200 bg-white'}
                             `}
                         >
-                            {currentStep > index + 1 && <span className="text-xs font-bold text-black">✓</span>}
-                            {currentStep === index + 1 && <div className="w-2 h-2 bg-black rounded-full"></div>}
+                            {currentStep > index + 1 ? (
+                                <span className="text-[10px] font-bold text-black">✓</span>
+                            ) : (
+                                <div className={`w-1.5 h-1.5 rounded-full ${currentStep === index + 1 ? 'bg-black' : 'bg-gray-200'}`}></div>
+                            )}
                         </div>
                         <span
-                            className={`mt-1.5 text-xs font-medium 
-                                ${currentStep >= index + 1 ? 'text-gray-900' : 'text-gray-400'}
+                            className={`text-[11px] font-semibold tracking-tight transition-colors
+                                ${currentStep >= index + 1 ? 'text-gray-900' : 'text-gray-300'}
                             `}
                         >
                             {step.name}
                         </span>
                     </div>
                     {index < steps.length - 1 && (
-                        <div className={`flex-1 h-0.5 mx-2 
-                            ${currentStep > index + 1 ? 'bg-yellow-400' : 'bg-gray-300'}
+                        <div className={`flex-1 h-[1px] mx-3 min-w-[30px]
+                            ${currentStep > index + 1 ? 'bg-gray-900' : 'bg-gray-200'}
                         `}></div>
                     )}
                 </React.Fragment>
@@ -75,88 +77,81 @@ const Stepper = ({ steps, currentStep }) => {
     );
 };
 
-const ServiceTypeCard = ({ icon, title, description, type, selectedType, onSelect }) => {
+const UploadArea = ({ label }) => (
+    <div className="space-y-3">
+        <h4 className="text-sm font-bold text-gray-900">{label}</h4>
+        <div className="border border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50/30 hover:bg-gray-50 transition-colors cursor-pointer group">
+            <div className="w-12 h-12 rounded-full border border-gray-100 bg-white flex items-center justify-center mb-3 shadow-sm group-hover:scale-105 transition-transform">
+                <FiCamera size={20} className="text-gray-400" />
+            </div>
+            <span className="text-xs font-semibold text-gray-400">Tap To Upload</span>
+        </div>
+    </div>
+);
+
+const ServiceTypeCard = ({ icon, label, description, type, selectedType, onSelect }) => {
     const isSelected = selectedType === type;
     return (
         <button
             type="button"
             onClick={() => onSelect(type)}
-            className={`p-4 border rounded-xl text-left w-full transition-all duration-150
-                ${isSelected ? 'border-yellow-500 ring-2 ring-yellow-400 bg-yellow-50' : 'border-gray-300 hover:border-gray-400 hover:shadow-sm'}
+            className={`p-4 border rounded-2xl text-left w-full transition-all flex flex-col gap-3 h-full
+                ${isSelected ? 'border-yellow-400 bg-yellow-50/30 ring-1 ring-yellow-400' : 'border-gray-100 hover:border-gray-200'}
             `}
         >
-            <div className="flex items-center mb-2">
-                {React.cloneElement(icon, { size: 20, className: `mr-3 ${isSelected ? 'text-yellow-600' : 'text-gray-500'}` })}
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full
-                    ${isSelected ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}
+            <div className="flex flex-col gap-2">
+                <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+                    {React.cloneElement(icon, { size: 22, className: isSelected ? 'text-yellow-600' : 'text-gray-400' })}
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border w-fit uppercase tracking-wider
+                    ${isSelected ? 'bg-yellow-100 border-yellow-200 text-yellow-700' : 'bg-white border-gray-200 text-gray-400'}
                 `}>
-                    {title.split(' ')[0]}
+                    {type.replace('_', ' ')}
                 </span>
             </div>
-            <h4 className={`text-md font-semibold mb-1 ${isSelected ? 'text-gray-900' : 'text-gray-800'}`}>{title}</h4>
-            <p className="text-xs text-gray-600">{description}</p>
+            <div>
+                <h4 className="text-sm font-bold text-gray-900 mb-1">{label}</h4>
+                <p className="text-[10px] text-gray-400 leading-relaxed font-medium">{description}</p>
+            </div>
         </button>
     );
 };
+
 // --- End Modal Helper Components ---
 
-// --- Accordion Item for Step 3 ---
-const AccordionItem = ({ icon, title, children, initiallyOpen = false }) => {
-    const [isOpen, setIsOpen] = useState(initiallyOpen);
-    return (
-        <div className="border-b border-gray-200 last:border-b-0">
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex justify-between items-center w-full py-4 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 px-1"
-            >
-                <div className="flex items-center">
-                    {React.cloneElement(icon, { size: 18, className: "mr-3 text-gray-500" })}
-                    <span>{title}</span>
-                </div>
-                {isOpen ? <FiChevronUp size={20} className="text-gray-500" /> : <FiChevronDown size={20} className="text-gray-500" />}
-            </button>
-            {isOpen && (
-                <div className="py-3 px-1 text-sm text-gray-600 space-y-2.5">
-                    {children}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const DetailRow = ({ label, value, valueClass = "text-gray-800 font-medium" }) => (
-    <div className="flex justify-between items-center">
-        <span className="text-gray-500">{label}</span>
-        <span className={valueClass}>{value}</span>
-    </div>
-);
-// --- End Accordion Item ---
-
-
-const AddDriverModal = ({ isOpen, onClose, entityType = "Driver" }) => {
+const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }) => {
     const [currentStep, setCurrentStep] = useState(1);
-    // Combine all form data into one object, even if parts are not used in all steps
     const [formData, setFormData] = useState({
-        // Step 1
-        firstName: 'Alex', lastName: 'Noman', age: '28', gender: 'male', email: 'alex.noman@example.com', phone: '+2348023456780',
-        nin: '909391252362837', nationality: 'Nigerian', address: 'No 5, Lekki phase 1, Lagos',
-        // Step 2
-        serviceType: 'ride_hailing', cityAllocation: 'lagos',
-        // Step 3 (Driver Details specific - this data might come from formData or be static for the view)
-        driverId: '6465', driverStatus: 'Online', driverType: 'Interstate/Intrastate', driverLocation: 'Lagos',
-        dob: '12th December 1996',
-        profileImg: 'https://randomuser.me/api/portraits/women/44.jpg', // Placeholder for driver's image
+        // Step 1: Personal
+        firstName: '',
+        lastName: '',
+        age: '',
+        gender: '',
+        email: '',
+        phone: '',
+        nin: '',
+        nationality: '',
+        state: '',
+        address: '',
+        // Step 3: Other
+        serviceType: 'ride_hailing',
+        cityAllocation: '',
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const modalContentRef = useRef(null);
 
+    const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
+
     useEffect(() => {
-        if (isOpen) {
-            //setCurrentStep(1); // Keep this if you want to always start at step 1
-            // For now, let's assume if it's opened, it might be for editing, so step 3 could be shown
-            // If always starting fresh:
-            // setCurrentStep(1);
-            // setFormData({ ...initial empty state... });
+        if (!isOpen) {
+            setCurrentStep(1);
+            setFormData({
+                firstName: '', lastName: '', age: '', gender: '', email: '', phone: '',
+                nin: '', nationality: '', state: '', address: '',
+                serviceType: 'ride_hailing', cityAllocation: '',
+            });
+            setError(null);
         }
     }, [isOpen]);
 
@@ -182,46 +177,105 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver" }) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
     const handleServiceTypeSelect = (type) => setFormData(prev => ({ ...prev, serviceType: type }));
 
-    const genderOptions = [{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' }];
-    const cityOptions = [{ value: 'lagos', label: 'Lagos' }, { value: 'abuja', label: 'Abuja' }];
-
-
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        if (currentStep === 2 && (!formData.serviceType || !formData.cityAllocation)) {
-            alert("Please select a service type and city allocation.");
+        
+        if (currentStep < 3) {
+            setCurrentStep(currentStep + 1);
             return;
         }
-        if (currentStep < steps.length) {
-            setCurrentStep(currentStep + 1);
-        } else {
-            console.log(`Submitting/Finalizing ${entityType} data:`, formData);
+
+        // Final Submission
+        setIsLoading(true);
+        setError(null);
+
+        const endpoint = entityType.toLowerCase() === 'driver' ? '/admin/add-driver' : '/admin/add-rider';
+        
+        // Match the user's local format: 081... or 070...
+        let cleanedPhone = formData.phone.replace(/\D/g, '');
+        if (cleanedPhone.startsWith('234') && cleanedPhone.length > 10) {
+            cleanedPhone = '0' + cleanedPhone.substring(3);
+        } else if (!cleanedPhone.startsWith('0') && cleanedPhone.length === 10) {
+            cleanedPhone = '0' + cleanedPhone;
+        }
+
+        const payload = {
+            email: formData.email,
+            phone_number: cleanedPhone,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            organization_id: 10 // Added back as a common required field for multi-tenant APIs
+        };
+
+        try {
+            const response = await fetch(`${BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Something went wrong');
+            }
+
+            console.log(`Successfully added ${entityType}:`, result);
+            if (onAddSuccess) onAddSuccess();
             onClose();
+        } catch (err) {
+            console.error("Submission error:", err);
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    const genderOptions = [
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' }
+    ];
+    const cityOptions = [
+        { value: 'lagos', label: 'Lagos' },
+        { value: 'abuja', label: 'Abuja' },
+        { value: 'ibadan', label: 'Ibadan' }
+    ];
+
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div ref={modalContentRef} className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto relative"> {/* Adjusted max-w for this view */}
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div 
+                ref={modalContentRef} 
+                className="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-[500px] max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-200"
+            >
+                <button 
+                    onClick={onClose} 
+                    className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors p-1"
+                >
                     <IoMdClose size={24} />
                 </button>
 
-                {/* Conditional Title based on step, or always "Add Driver/Rider" */}
-                <h2 className="text-xl font-bold text-gray-900 mb-6">
-                    {currentStep === 3 ? `${entityType} details` : `Add ${entityType}`}
+                <h2 className="text-2xl font-bold text-gray-900 mb-8">
+                    Add {entityType}
                 </h2>
                 
-                {currentStep !== 3 && <Stepper steps={steps} currentStep={currentStep} />}
+                <Stepper steps={steps} currentStep={currentStep} />
 
-                <form onSubmit={handleFormSubmit} className="space-y-5">
-                    {/* Step 1 */}
-                    {currentStep === 1 && ( /* ... Step 1 JSX from previous code ... */
-                        <>
+                {error && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm">
+                        <FiAlertCircle className="shrink-0" size={18} />
+                        <p>{error}</p>
+                    </div>
+                )}
+
+                <form onSubmit={handleFormSubmit} className="space-y-8">
+                    {/* Step 1: Personal details */}
+                    {currentStep === 1 && (
+                        <div className="space-y-8">
                             <div>
-                                <h3 className="text-md font-semibold text-gray-800 mb-3">Personal Information</h3>
+                                <h3 className="text-sm font-bold text-gray-900 mb-5">Personal Information</h3>
                                 <div className="space-y-4">
                                     <ModalInputField placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required />
                                     <ModalInputField placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required />
@@ -230,113 +284,90 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver" }) => {
                                     <ModalInputField placeholder="Email" type="email" icon={<FiMail />} name="email" value={formData.email} onChange={handleChange} required />
                                     <ModalInputField icon={<FiPhone />}>
                                         <div className="flex items-center w-full">
-                                            <span className="text-sm text-gray-700 mr-2 whitespace-nowrap">+234</span>
-                                            <span className="text-gray-400 mr-2">|</span>
-                                            <input type="tel" name="phone" value={formData.phone.startsWith('+234') ? formData.phone.substring(4) : formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: '+234' + e.target.value.replace(/\D/g, '') }))} className="w-full text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent" required />
+                                            <span className="text-sm text-gray-800 font-semibold mr-2">+234</span>
+                                            <input 
+                                                type="tel" 
+                                                placeholder="Phone Number"
+                                                name="phone" 
+                                                value={formData.phone} 
+                                                onChange={handleChange}
+                                                className="w-full text-sm text-gray-800 placeholder-gray-400 outline-none bg-transparent" 
+                                                required 
+                                            />
                                         </div>
                                     </ModalInputField>
                                 </div>
                             </div>
                             <div>
-                                <h3 className="text-md font-semibold text-gray-800 mb-3 mt-6">Other Information</h3>
+                                <h3 className="text-sm font-bold text-gray-900 mb-5">Other Information</h3>
                                 <div className="space-y-4">
-                                    <ModalInputField placeholder="NIN/International passport" name="nin" value={formData.nin} onChange={handleChange} required />
+                                    <ModalInputField placeholder="NIN/ international passport" name="nin" value={formData.nin} onChange={handleChange} required />
                                     <ModalInputField placeholder="Nationality" name="nationality" value={formData.nationality} onChange={handleChange} required />
+                                    <ModalInputField placeholder="State" name="state" value={formData.state} onChange={handleChange} required />
                                     <ModalInputField placeholder="Address" name="address" value={formData.address} onChange={handleChange} required />
                                 </div>
                             </div>
-                        </>
+                        </div>
                     )}
 
-                    {/* Step 2 */}
-                    {currentStep === 2 && ( /* ... Step 2 JSX from previous code ... */
-                         <div className="space-y-6">
+                    {/* Step 2: Documents */}
+                    {currentStep === 2 && (
+                        <div className="space-y-6 pb-4">
+                           <UploadArea label="Driver's License" />
+                           <UploadArea label="Vehicle Insurance" />
+                           <UploadArea label="Road worthiness report" />
+                        </div>
+                    )}
+
+                    {/* Step 3: Other details */}
+                    {currentStep === 3 && (
+                        <div className="space-y-8">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <ServiceTypeCard icon={<FaCarSide />} title="Ride Hailing" description="Earn money driving as taxi or ride hailing service within your state and its environs" type="ride_hailing" selectedType={formData.serviceType} onSelect={handleServiceTypeSelect}/>
-                                <ServiceTypeCard icon={<FaShippingFast />} title="Logistics" description="On demand delivery services for customers within your state" type="logistics" selectedType={formData.serviceType} onSelect={handleServiceTypeSelect}/>
-                                <ServiceTypeCard icon={<FaBusAlt />} title="Intercity Journey" description="Bus or taxi services for inter state or long distance journey" type="intercity" selectedType={formData.serviceType} onSelect={handleServiceTypeSelect}/>
+                                <ServiceTypeCard 
+                                    icon={<FaCarSide />} 
+                                    label="Driver" 
+                                    description="Earn money driving as taxi or ride hailing service within your state and its environs" 
+                                    type="ride_hailing" 
+                                    selectedType={formData.serviceType} 
+                                    onSelect={handleServiceTypeSelect}
+                                />
+                                <ServiceTypeCard 
+                                    icon={<FaShippingFast />} 
+                                    label="Delivery" 
+                                    description="On demand delivery services for customers within your state" 
+                                    type="logistics" 
+                                    selectedType={formData.serviceType} 
+                                    onSelect={handleServiceTypeSelect}
+                                />
+                                <ServiceTypeCard 
+                                    icon={<FaBusAlt />} 
+                                    label="Intercity Journey" 
+                                    description="Bus or taxi services for inter state or long distance journey" 
+                                    type="travel" 
+                                    selectedType={formData.serviceType} 
+                                    onSelect={handleServiceTypeSelect}
+                                />
                             </div>
                             <div>
-                                <h3 className="text-md font-semibold text-gray-800 mb-3">City Allocation</h3>
+                                <h3 className="text-sm font-bold text-gray-900 mb-4">City Allocation</h3>
                                 <ModalSelectField placeholder="Select a city" options={cityOptions} name="cityAllocation" value={formData.cityAllocation} onChange={handleChange} required />
                             </div>
                         </div>
                     )}
 
-                    {/* Step 3: Driver Details View */}
-                    {currentStep === 3 && (
-                        <div className="space-y-4">
-                            {/* Profile Header */}
-                            <div className="flex items-center space-x-4 mb-6">
-                                <img
-                                    src={formData.profileImg || "https://via.placeholder.com/80"} // Placeholder if no image
-                                    alt={`${formData.firstName} ${formData.lastName}`}
-                                    className="w-20 h-20 rounded-full object-cover"
-                                />
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900">{`${formData.firstName} ${formData.lastName}`}</h3>
-                                    <p className="text-sm text-gray-500">{formData.driverId}</p>
-                                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full mt-1 inline-block
-                                        ${formData.driverStatus === 'Online' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}
-                                    `}>
-                                        {formData.driverStatus}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Basic Info List */}
-                            <div className="space-y-3 text-sm">
-                                <DetailRow label={<><FiPhone size={16} className="inline mr-2 text-gray-400"/>Phone Number</>} value={formData.phone} />
-                                <DetailRow label={<><FiRepeat size={16} className="inline mr-2 text-gray-400"/>Type</>} value={<span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">{formData.driverType}</span>} />
-                                <DetailRow label={<><FiMapPin size={16} className="inline mr-2 text-gray-400"/>Location</>} value={formData.driverLocation} />
-                            </div>
-                            
-                            <hr className="my-5" />
-
-                            {/* Accordions */}
-                            <AccordionItem icon={<FiUser />} title="Other Details" initiallyOpen={true}>
-                                <DetailRow label="Gender" value={<span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">{formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1)}</span>} />
-                                <DetailRow label="DOB" value={formData.dob} />
-                                <DetailRow label="Address" value={formData.address} />
-                                <DetailRow label="NIN" value={formData.nin} />
-                            </AccordionItem>
-                            <AccordionItem icon={<FiTruck />} title="Car Details">
-                                <p>Car model, registration, color, etc. would be displayed here.</p>
-                                {/* Example: <DetailRow label="Car Model" value="Toyota Corolla 06" /> */}
-                            </AccordionItem>
-                            <AccordionItem icon={<FiClock />} title="Ride History">
-                                <p>A summary or list of recent rides would be displayed here.</p>
-                            </AccordionItem>
-                            <AccordionItem icon={<FiFileText />} title="Documents">
-                                <p>Links to or status of uploaded documents would be displayed here.</p>
-                            </AccordionItem>
-                        </div>
-                    )}
-
-                    {/* Button for Steps 1 & 2 */}
-                    {currentStep < 3 && (
+                    <div className="pt-4 pb-2">
                         <button
                             type="submit"
-                            className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-8"
+                            disabled={isLoading}
+                            className="w-full bg-black text-white font-bold text-sm py-4 rounded-full hover:bg-gray-800 transition-all active:scale-[0.98] disabled:bg-gray-400 flex items-center justify-center"
                         >
-                            Continue
+                            {isLoading ? (
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            ) : (
+                                currentStep === 3 ? `Add ${entityType}` : 'Continue'
+                            )}
                         </button>
-                    )}
-                    {/* Button for Step 3 - "Edit Driver" or "Complete/Add Driver" */}
-                    {currentStep === 3 && (
-                         <button
-                            type="submit" // If it submits and closes
-                            // onClick={onClose} // Or if it just closes, or triggers an edit mode
-                            className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-8"
-                        >
-                            {/* The image shows "Edit driver", but this is an "Add Driver" flow.
-                                For consistency with "Add Driver", the button might be "Add Driver" or "Complete".
-                                If this modal is also used for *editing*, then "Edit Driver" makes sense.
-                                Let's assume "Complete" for the add flow.
-                            */}
-                            Complete {entityType} Setup 
-                        </button>
-                    )}
+                    </div>
                 </form>
             </div>
         </div>

@@ -6,6 +6,7 @@ import { BsThreeDotsVertical } from 'react-icons/bs';
 
 // Import the modal
 import AddDriverModal from './AddDriverModal'; // Assuming it's in the same directory or adjust path
+import DriverDetailsView from './driver/DriverDetailsView';
 
 // Helper component for the "Today" tag
 const TodayTag = () => (
@@ -23,14 +24,16 @@ const DriversContent = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [ridersStats, setRidersStats] = useState(null);
+    const [selectedDriverId, setSelectedDriverId] = useState(null);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
 
-    useEffect(() => {
+    const fetchDrivers = () => {
+        setIsLoading(true);
         const endpoint = (`${BASE_URL}/admin/drivers`);
         fetch(endpoint)
-            .then((response) => { 
+            .then((response) => {
                 if (!response.ok) {
                     throw new Error(`Server responded with ${response.status}`);
                 }
@@ -45,6 +48,10 @@ const DriversContent = () => {
                 setError(err.message || "Unknown error");
                 setIsLoading(false);
             });
+    };
+
+    useEffect(() => {
+        fetchDrivers();
     }, []);
 
     useEffect(() => {
@@ -67,11 +74,20 @@ const DriversContent = () => {
             });
     }, []);
 
-
+    console.log("data for drivers", data);
 
 
     const entityTypeForModal = "Driver";
     const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, 'Pending'];
+
+    const handleAddDriverSubmit = () => {
+        fetchDrivers();
+        setIsModalOpen(false);
+    };
+
+    if (selectedDriverId) {
+        return <DriverDetailsView id={selectedDriverId} onBack={() => setSelectedDriverId(null)} />;
+    }
 
     return (
         <div className="text-gray-800 relative">
@@ -158,7 +174,11 @@ const DriversContent = () => {
                         {data?.data?.data?.length > 0 ? (
                             <tbody>
                                 {data?.data?.data?.map((driver, index) => (
-                                    <tr key={driver.id} className="bg-white border-b border-gray-100 hover:bg-gray-50">
+                                    <tr
+                                        key={driver.id}
+                                        className="bg-white border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                                        onClick={() => setSelectedDriverId(driver.id)}
+                                    >
                                         <td className="px-4 py-2">{index + 1}</td>
                                         <td className="px-4 py-2">{driver.car_number_plate || 'N/A'}</td>
                                         <td className="px-4 py-2">
@@ -171,20 +191,22 @@ const DriversContent = () => {
                                                     : driver.username || 'N/A'}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-2 capitalize">{driver.status}</td>
+                                        <td className="px-4 py-2 capitalize">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${driver.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                {driver.status}
+                                            </span>
+                                        </td>
                                         <td className="px-4 py-2 capitalize">{driver.gender || 'N/A'}</td>
-                                        {/* <td className="px-4 py-2">
-                                            {driver.premium_class || "--"}
-                                        </td> */}
                                         <td className="px-4 py-2">{driver.city || 'N/A'}</td>
-                                        <td className="px-4 py-2">₦{driver.total_credits || 0}</td>
+                                        <td className="px-4 py-2 font-semibold">₦{Number(driver.total_credits || 0).toLocaleString()}</td>
                                         <td className="px-4 py-2 text-center">
-                                            <button className="text-gray-400 hover:text-gray-600">
+                                            <button className="text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                                                 <BsThreeDotsVertical size={16} />
                                             </button>
                                         </td>
                                     </tr>
                                 ))}
+
                             </tbody>
                         ) : (
                             <tbody>
@@ -235,6 +257,7 @@ const DriversContent = () => {
             <AddDriverModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onAddSuccess={handleAddDriverSubmit}
                 entityType={entityTypeForModal}
             />
         </div>

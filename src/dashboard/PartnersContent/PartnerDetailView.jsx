@@ -1,25 +1,53 @@
+import { useEffect, useState } from 'react';
 import { TbFilter } from 'react-icons/tb';
-import { FiPlus, FiCreditCard, FiEdit2, FiArrowLeft } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiArrowLeft } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { RiVisaLine } from 'react-icons/ri';
 
-const employeeTableData = Array.from({ length: 6 }, (_, i) => ({
-    id: `e${i + 1}`,
-    no: `${String(i + 1).padStart(2, '0')}`,
-    name: 'John Doe',
-    email: 'user@gmail.com',
-    totalExpense: '$ 35.44',
-}));
+// Change 2: Accept partnerId as a prop
+const PartnerDetailView = ({ onBack, onAddEmployee, partnerId }) => {
+    // Change 3: Add state for partner data
+    const [partner, setPartner] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-const PartnerDetailView = ({ onBack, onAddEmployee}) => {
+    const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
+
+    // Change 4: Fetch partner details using the id
+    useEffect(() => {
+        if (!partnerId) return;
+        fetch(`${BASE_URL}/admin/partner/${partnerId}`)
+            // fetch(`${BASE_URL}/admin/partner/12`)
+            .then((res) => {
+                if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+                return res.json();
+            })
+            .then((jsonData) => {
+                setPartner(jsonData?.data);
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                console.error("Fetch error:", err);
+                setError(err.message);
+                setIsLoading(false);
+            });
+    }, [partnerId]);
+
     const TodayTag = () => (
         <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
             Today
         </span>
     );
+
+    // Change 5: Show loading/error states
+    if (isLoading) return <div className="p-8 text-gray-500">Loading...</div>;
+    if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
+
+    console.log("partnerId", partner)
+
+
     return (
         <div className="animate-fade-in">
-            {/* Header / Payment Methods Section */}
             <div className="bg-[#F8F7F1] p-6 sm:p-8">
                 <button
                     onClick={onBack}
@@ -30,12 +58,11 @@ const PartnerDetailView = ({ onBack, onAddEmployee}) => {
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                            {/* Placeholder for Logo */}
-                        </div>
+                        <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg" />
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900">ACME Corporation</h2>
-                            <p className="text-gray-400 text-sm">123 Innovation Drive, Tech City, 12345</p>
+                            {/* Change 6: Display real company name and address */}
+                            <h2 className="text-xl font-bold text-gray-900">{partner?.company_name}</h2>
+                            <p className="text-gray-400 text-sm">{partner?.company_address}</p>
                         </div>
                     </div>
                     <button className="mt-4 md:mt-0 bg-black text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center hover:bg-gray-800 transition">
@@ -43,7 +70,6 @@ const PartnerDetailView = ({ onBack, onAddEmployee}) => {
                     </button>
                 </div>
 
-                {/* Payment Card Section */}
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4 flex flex-col sm:flex-row items-center justify-between">
                     <div className="flex items-center gap-4 w-full sm:w-auto">
                         <div className="p-2 border border-gray-200 rounded-md">
@@ -64,7 +90,6 @@ const PartnerDetailView = ({ onBack, onAddEmployee}) => {
                 </button>
             </div>
 
-            {/* Stats Section */}
             <div className="bg-[#F8F7F1] px-6 sm:px-8 pb-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col justify-between h-32">
@@ -72,26 +97,26 @@ const PartnerDetailView = ({ onBack, onAddEmployee}) => {
                             <h3 className="text-sm font-medium text-gray-600">Total Registered Employees</h3>
                             <TodayTag />
                         </div>
-                        <p className="text-3xl font-bold text-gray-900">30</p>
+                        {/* Change 7: Display real stats */}
+                        <p className="text-3xl font-bold text-gray-900">{partner?.total_employees ?? '-'}</p>
                     </div>
                     <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col justify-between h-32">
                         <div className="flex justify-between items-start">
                             <h3 className="text-sm font-medium text-gray-600">Total Expense Incurred</h3>
                             <TodayTag />
                         </div>
-                        <p className="text-3xl font-bold text-gray-900">12</p>
+                        <p className="text-3xl font-bold text-gray-900">{partner?.total_expense ?? '-'}</p>
                     </div>
                     <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col justify-between h-32">
                         <div className="flex justify-between items-start">
                             <h3 className="text-sm font-medium text-gray-600">Emails Managed</h3>
                             <TodayTag />
                         </div>
-                        <p className="text-3xl font-bold text-gray-900">12</p>
+                        <p className="text-3xl font-bold text-gray-900">{partner?.emails_managed ?? '-'}</p>
                     </div>
                 </div>
             </div>
 
-            {/* Employee Table Section */}
             <div className="bg-white px-6 sm:px-8 py-8 min-h-screen">
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
                     <div className="flex items-center border border-gray-200 rounded-lg px-3 py-2.5 w-full md:max-w-[350px] bg-white">
@@ -102,12 +127,9 @@ const PartnerDetailView = ({ onBack, onAddEmployee}) => {
                             className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent text-gray-600"
                         />
                     </div>
-                    {/* <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2.5 rounded-full flex items-center transition-colors text-sm">
-                        <FiPlus size={18} className="mr-1.5" /> Add Employee
-                    </button> */}
                     <button
-                        onClick={onAddEmployee} // Add this onClick
-                        className="bg-yellow-400 hover:bg-yellow-500..."
+                        onClick={onAddEmployee}
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2.5 rounded-full flex items-center transition-colors text-sm"
                     >
                         <FiPlus size={18} className="mr-1.5" /> Add Employee
                     </button>
@@ -126,12 +148,13 @@ const PartnerDetailView = ({ onBack, onAddEmployee}) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {employeeTableData.map((emp) => (
-                                <tr key={emp.id} className="group hover:bg-gray-50 border-b border-gray-50 last:border-0 transition-colors">
-                                    <td className="px-4 py-4 text-gray-500 font-medium">{emp.no}</td>
+                            {/* Change 8: Map over real employees from partner data */}
+                            {(partner?.employees ?? []).map((emp, index) => (
+                                <tr key={emp.id ?? index} className="group hover:bg-gray-50 border-b border-gray-50 last:border-0 transition-colors">
+                                    <td className="px-4 py-4 text-gray-500 font-medium">{String(index + 1).padStart(2, '0')}</td>
                                     <td className="px-4 py-4 text-gray-900 font-medium">{emp.name}</td>
                                     <td className="px-4 py-4 text-gray-500">{emp.email}</td>
-                                    <td className="px-4 py-4 text-gray-500 text-right">{emp.totalExpense}</td>
+                                    <td className="px-4 py-4 text-gray-500 text-right">{emp.total_expense ?? '-'}</td>
                                     <td className="px-4 py-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <button className="bg-black text-white text-xs font-medium px-4 py-2 rounded shadow-sm hover:bg-gray-800 transition-colors">

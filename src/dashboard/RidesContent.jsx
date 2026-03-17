@@ -155,16 +155,16 @@ const RidesContent = () => {
   const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
   useEffect(() => {
-  const endpoint =
-  activeTab === "All"
-    ? `${BASE_URL}/admin/rides`
-    : activeTab === "Completed"
-      ? `${BASE_URL}/admin/completed-ride?from=2025-06-24`
-      : activeTab === "Canceled"
-        ? `${BASE_URL}/admin/cancelled-ride`
-        : "";
+    const endpoint =
+      activeTab === "All"
+        ? `${BASE_URL}/admin/rides`
+        : activeTab === "Completed"
+          ? `${BASE_URL}/admin/completed-ride?from=2025-06-24`
+          : activeTab === "Canceled"
+            ? `${BASE_URL}/admin/cancelled-ride`
+            : "";
 
-      
+
     // const endpoint = (`${BASE_URL}/admin/rides`);
     fetch(endpoint)
       .then((response) => {
@@ -276,12 +276,12 @@ const RidesContent = () => {
                   <td className="px-4 py-3 text-gray-700">{index + 1}</td>
                   <td className="px-4 py-3"><span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-medium">{ride.carNo || "N/A"}</span></td>
                   <td className="px-4 py-3"><div className="flex items-center">
-                    <img className="w-6 h-6 rounded-full mr-2 object-cover" src={ride.picture || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"} alt={ride.driverNam|| "N/A"} />
+                    <img className="w-6 h-6 rounded-full mr-2 object-cover" src={ride.picture || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"} alt={ride.driverNam || "N/A"} />
                     <span className="font-medium text-gray-800">{ride.driverName !== " " ? ride.driverName : "N/A"}</span>
                   </div></td>
                   <td className="px-4 py-3"><div className="flex items-center">
                     {/* <span className={`w-2 h-2 rounded-full mr-2 ${ride.statusColor}`}></span> */}
-                  <span className="text-gray-700">{ride.status || "N/A"}</span></div></td>
+                    <span className="text-gray-700">{ride.status || "N/A"}</span></div></td>
                   <td className="px-4 py-3 text-gray-700">{ride.gender || "N/A"}</td>
                   <td className="px-4 py-3 text-gray-700">{ride.type || "Driver"}</td>
                   <td className="px-4 py-3 text-gray-700">{ride.location || "N/A"}</td>

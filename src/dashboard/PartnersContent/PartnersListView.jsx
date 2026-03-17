@@ -9,6 +9,8 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
     const [error, setError] = useState(null);
     const [data, setData] = useState(null);
     const [partnersStats, setPartnersStats] = useState(null);
+    const [partnersList, setPartnersList] = useState([]);
+
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
     const partnersTableData = Array.from({ length: 6 }, (_, i) => ({
@@ -28,7 +30,6 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
 
     useEffect(() => {
         const endpoint = (`${BASE_URL}/admin/partner-stat`);
-        // const endpoint = (`${BASE_URL}/admin/partners`);
         fetch(endpoint)
             .then((response) => {
                 if (!response.ok) {
@@ -47,8 +48,31 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
             });
     }, []);
 
-    console.log("partnersStats", partnersStats)
-    console.log("partners", partnersStats)
+    useEffect(() => {
+        const endpoint = (`${BASE_URL}/admin/partners`);
+        fetch(endpoint)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+                return response.json();
+            })
+            .then((jsonData) => {
+                setPartnersList(jsonData);
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                console.error("Fetch error:", err);
+                setError(err.message || "Unknown error");
+                setIsLoading(false);
+            });
+    }, []);
+
+
+
+    const partners = partnersList?.data?.paginated?.data ?? [];
+    console.log("partners", partners)
+
 
     return (
         <>
@@ -106,23 +130,24 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
                             <tr>
                                 <th scope="col" className="px-4 py-3 font-medium">No.</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Name</th>
-                                <th scope="col" className="px-4 py-3 font-medium">Employee account</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Expenses</th>
                                 <th scope="col" className="px-4 py-3 font-medium text-center">Actions</th>
                                 <th scope="col" className="px-2 py-3 font-medium"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {partnersTableData.map((partner) => (
+                            {partners.map((partner, index) => (
                                 <tr key={partner.id} className="bg-white border-b border-gray-100 hover:bg-gray-50">
-                                    <td className="px-4 py-3 text-gray-700">{partner.no}</td>
-                                    <td className="px-4 py-3 font-medium text-gray-800">{partner.name}</td>
-                                    <td className="px-4 py-3 text-gray-700">{partner.employeeAccount}</td>
-                                    <td className="px-4 py-3 text-gray-700">{partner.profitsMade}</td>
+                                    {/* <td className="px-4 py-3 text-gray-700">{partner.no}</td> */}
+                                    <td className="px-4 py-3 text-gray-700">{String(index + 1).padStart(2, '0')}</td>
+                                    <td className="px-4 py-3 font-medium text-gray-800">{partner.company_name}</td>
+                                    <td className="px-4 py-3 text-gray-700">0</td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center space-x-2">
                                             <button
-                                                onClick={onViewDetails}
+                                                // onClick={onViewDetails}
+                                                onClick={() => onViewDetails(partner.id)}
+
                                                 className="bg-black text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-gray-800 transition-colors"
                                             >
                                                 View details
@@ -131,7 +156,8 @@ const PartnersListView = ({ onViewDetails, onAddPartner, onAddEmployee }) => {
                                                 Add Employee
                                             </button> */}
                                             <button
-                                                onClick={onAddEmployee} // Add this onClick
+                                                // onClick={onAddEmployee} // Add this onClick
+                                                onClick={() => onAddEmployee(partner.id)}
                                                 className="bg-black text-white text-xs font-medium px-3 py-1.5 rounded-md..."
                                             >
                                                 Add Employee

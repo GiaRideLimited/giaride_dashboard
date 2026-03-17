@@ -7,6 +7,7 @@ import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs'; // Adde
 
 // Import the modal (assuming it's in the same directory or adjust path)
 import AddDriverModal from './AddDriverModal';
+import RiderDetailsView from './rider/RiderDetailsView';
 
 // Helper component for the "Today" tag
 const TodayTag = () => (
@@ -34,11 +35,13 @@ const RidersContent = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [ridersStats, setRidersStats] = useState(null);
+    const [selectedRiderRef, setSelectedRiderRef] = useState(null);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
 
-    useEffect(() => {
+    const fetchRiders = () => {
+        setIsLoading(true);
         const endpoint = (`${BASE_URL}/admin/riders`);
         fetch(endpoint)
             .then((response) => {
@@ -56,6 +59,10 @@ const RidersContent = () => {
                 setError(err.message || "Unknown error");
                 setIsLoading(false);
             });
+    };
+
+    useEffect(() => {
+        fetchRiders();
     }, []);
 
     console.log("RidersContent data:", data);
@@ -83,29 +90,16 @@ const RidersContent = () => {
     const entityTypeForModal = "Rider";
     const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, 'Pending'];
 
-    const handleAddRiderSubmit = (formDataFromModal) => {
-        console.log(`New ${entityTypeForModal} Submitted:`, formDataFromModal);
-        // Create a new rider entry based on the form data
-        // Note: formDataFromModal will have driver-specific fields from AddDriverModal
-        const newRider = {
-            id: `r${ridersData.length + 1}`,
-            no: `${String(ridersData.length + 1).padStart(2, '0')}`,
-            riderId: `RDR-NEW${Date.now().toString().slice(-4)}`,
-            name: `${formDataFromModal.firstName} ${formDataFromModal.lastName}`,
-            img: 'https://via.placeholder.com/150/cccccc/808080?Text=User', // Placeholder
-            status: 'pending', // New riders might be pending
-            statusColor: 'bg-yellow-500',
-            gender: formDataFromModal.gender.charAt(0).toUpperCase() + formDataFromModal.gender.slice(1),
-            joinDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'),
-            totalRides: '0',
-            location: formDataFromModal.address.split(',').pop().trim() || 'N/A', // Attempt to get city
-        };
-        setRidersData(prevRiders => [newRider, ...prevRiders]);
-        setIsModalOpen(false); // Close the modal
-        // Optionally show a success message/modal here
+    const handleAddRiderSubmit = () => {
+        fetchRiders();
+        setIsModalOpen(false);
     };
 
     console.log(data)
+
+    if (selectedRiderRef) {
+        return <RiderDetailsView reference={selectedRiderRef} onBack={() => setSelectedRiderRef(null)} />;
+    }
 
     return (
         <div className="text-gray-800 relative">
@@ -189,15 +183,20 @@ const RidersContent = () => {
                                 {/* <th scope="col" className="px-4 py-3 font-medium">Type</th> */}
                                 <th scope="col" className="px-4 py-3 font-medium">Location</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Expenditures</th>
-                                <th scope="col" className="px-4 py-3 font-medium text-center"></th> 
+                                <th scope="col" className="px-4 py-3 font-medium text-center"></th>
                             </tr>
                         </thead>
                         {data?.data?.data?.length > 0 ? (
                             <tbody>
                                 {data?.data?.data?.map((driver, index) => (
-                                    <tr key={driver.id} className="bg-white border-b border-gray-100 hover:bg-gray-50">
+                                    <tr
+                                        key={driver.id}
+                                        className="bg-white border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                                        onClick={() => setSelectedRiderRef(driver.reference)}
+                                    >
                                         <td className="px-4 py-2">{index + 1}</td>
                                         <td className="px-4 py-2">{driver.car_number_plate || 'N/A'}</td>
+                                        {/* <td className="px-4 py-2">{driver.reference || 'N/A'}</td> */}
                                         <td className="px-4 py-2">
                                             <div className="flex items-center">
 
@@ -208,15 +207,16 @@ const RidersContent = () => {
                                                     : driver.username || 'N/A'}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-2 capitalize">{driver.status}</td>
+                                        <td className="px-4 py-2 capitalize">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${driver.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                {driver.status}
+                                            </span>
+                                        </td>
                                         <td className="px-4 py-2 capitalize">{driver.gender || 'N/A'}</td>
-                                        {/* <td className="px-4 py-2">
-                                            {driver.premium_class || "--"}
-                                        </td> */}
                                         <td className="px-4 py-2">{driver.city || 'N/A'}</td>
-                                        <td className="px-4 py-2">₦ {driver.total_debit || 0}</td>
+                                        <td className="px-4 py-2">₦ {Number(driver.total_debit || 0).toLocaleString()}</td>
                                         <td className="px-4 py-2 text-center">
-                                            <button className="text-gray-400 hover:text-gray-600">
+                                            <button className="text-gray-400 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                                                 <BsThreeDotsVertical size={16} />
                                             </button>                                        </td>
                                     </tr>
@@ -229,7 +229,7 @@ const RidersContent = () => {
                                 </tr>
                             </tbody>
                         )}
-                   
+
                     </table>
                 </div>
             </div>
@@ -238,7 +238,7 @@ const RidersContent = () => {
             <AddDriverModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSubmitBooking={handleAddRiderSubmit} // Changed prop name for clarity if modal submits booking-like data
+                onAddSuccess={handleAddRiderSubmit}
                 entityType={entityTypeForModal}
             />
         </div>

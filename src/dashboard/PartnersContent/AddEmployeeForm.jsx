@@ -1,106 +1,8 @@
-// import React from 'react';
-// import { FiChevronRight } from 'react-icons/fi';
-
-// const AddEmployeeForm = ({ onBack, onBackToPartners }) => {
-//     return (
-//         <div className="bg-white p-6 sm:p-10 min-h-screen animate-fade-in">
-//             {/* Breadcrumb Header */}
-//             <div className="flex items-center gap-2 mb-8 text-sm">
-//                 <button
-//                     onClick={onBackToPartners}
-//                     className="text-gray-500 hover:text-gray-900 font-medium transition-colors"
-//                 >
-//                     Partners
-//                 </button>
-//                 <FiChevronRight className="text-gray-400" />
-//                 <button
-//                     onClick={onBack}
-//                     className="text-gray-500 hover:text-gray-900 font-medium transition-colors"
-//                 >
-//                     ACME Org.
-//                 </button>
-//                 <FiChevronRight className="text-gray-400" />
-//                 <span className="font-bold text-gray-900">Add Employee</span>
-//             </div>
-
-//             {/* Form Container */}
-//             <form className="max-w-4xl">
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
-
-//                     {/* Full Name */}
-//                     <div className="flex flex-col gap-2">
-//                         <label className="text-sm text-gray-500 font-medium">Full Name</label>
-//                         <input
-//                             type="text"
-//                             className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-shadow"
-//                         />
-//                     </div>
-
-//                     {/* Email Address */}
-//                     <div className="flex flex-col gap-2">
-//                         <label className="text-sm text-gray-500 font-medium">Email Address</label>
-//                         <input
-//                             type="email"
-//                             className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-shadow"
-//                         />
-//                     </div>
-
-//                     {/* Address */}
-//                     <div className="flex flex-col gap-2">
-//                         <label className="text-sm text-gray-500 font-medium">Address</label>
-//                         <input
-//                             type="text"
-//                             className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-shadow"
-//                         />
-//                     </div>
-
-//                     {/* City */}
-//                     <div className="flex flex-col gap-2">
-//                         <label className="text-sm text-gray-500 font-medium">City</label>
-//                         <input
-//                             type="text"
-//                             className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-shadow"
-//                         />
-//                     </div>
-
-//                     {/* State */}
-//                     <div className="flex flex-col gap-2">
-//                         <label className="text-sm text-gray-500 font-medium">State</label>
-//                         <input
-//                             type="text"
-//                             className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-shadow"
-//                         />
-//                     </div>
-
-//                     {/* Country */}
-//                     <div className="flex flex-col gap-2">
-//                         <label className="text-sm text-gray-500 font-medium">Country</label>
-//                         <input
-//                             type="text"
-//                             className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-shadow"
-//                         />
-//                     </div>
-//                 </div>
-
-//                 {/* Create Button */}
-//                 <button
-//                     type="button"
-//                     className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-3.5 rounded-lg transition-colors shadow-sm"
-//                 >
-//                     Create
-//                 </button>
-//             </form>
-//         </div>
-//     );
-// };
-
-// export default AddEmployeeForm;
-
-
 import React, { useState } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
 
-const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId = 8 }) => {
+const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId }) => {
+    console.log("organizationId ", organizationId)
     // 1. State for form data matching API structure
     const [formData, setFormData] = useState({
         first_name: '',
@@ -146,8 +48,13 @@ const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId = 8 }) => {
                 body: JSON.stringify(payload)
             });
 
+            // if (!response.ok) {
+            //     const errorData = await response.json();
+            //     throw new Error(errorData.message || 'Failed to create employee');
+            // }
             if (!response.ok) {
                 const errorData = await response.json();
+                console.log('Validation errors:', errorData); // Add this
                 throw new Error(errorData.message || 'Failed to create employee');
             }
 

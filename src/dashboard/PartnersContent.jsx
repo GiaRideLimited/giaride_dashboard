@@ -1,47 +1,3 @@
-// import React, { useState } from 'react';
-// import PartnersListView from './PartnersContent/PartnersListView';
-// import AddPartnerForm from './PartnersContent/AddPartnerForm';
-// import PartnerDetailView from './PartnersContent/PartnerDetailView';
-
-
-
-// const PartnersContent = () => {
-//   // States: 'list', 'details', 'add-partner'
-//   const [view, setView] = useState('list');
-
-//   const handleBackToList = () => {
-//     setView('list');
-//   };
-
-//   return (
-//     <div className="text-gray-800 min-h-screen font-sans bg-white">
-
-//       {/* 1. Show List View */}
-//       {view === 'list' && (
-//         <PartnersListView
-//           onViewDetails={() => setView('details')}
-//           onAddPartner={() => setView('add-partner')}
-//         />
-//       )}
-
-//       {/* 2. Show Add Partner Form */}
-//       {view === 'add-partner' && (
-//         <AddPartnerForm onBack={handleBackToList} />
-//       )}
-
-//       {/* 3. Show Details View */}
-//       {view === 'details' && (
-//         // Ensure PartnerDetailView has an onBack prop in its definition
-//         <PartnerDetailView onBack={handleBackToList} />
-//       )}
-
-//     </div>
-//   );
-// };
-
-// export default PartnersContent;
-
-
 import React, { useState } from 'react';
 
 // Import your components
@@ -53,12 +9,22 @@ import AddEmployeeForm from './PartnersContent/AddEmployeeForm'; // Import the n
 const PartnersContent = () => {
   // States: 'list', 'details', 'add-partner', 'add-employee'
   const [view, setView] = useState('list');
+  const [selectedPartnerId, setSelectedPartnerId] = useState(null);
+
 
   // Navigation Handlers
   const handleBackToList = () => setView('list');
-  const handleViewDetails = () => setView('details');
   const handleAddPartner = () => setView('add-partner');
-  const handleAddEmployee = () => setView('add-employee');
+  // const handleAddEmployee = () => setView('add-employee');
+  const handleAddEmployee = (id) => {
+    if (id) setSelectedPartnerId(id); // only update if id is passed
+    setView('add-employee');
+  };
+
+  const handleViewDetails = (id) => {
+    setSelectedPartnerId(id);
+    setView('details');
+  };
 
   return (
     <div className="text-gray-800 min-h-screen font-sans bg-white">
@@ -78,19 +44,27 @@ const PartnersContent = () => {
         <AddPartnerForm onBack={handleBackToList} />
       )}
 
-      {/* 3. Partner Details View */}
+
       {view === 'details' && (
         <PartnerDetailView
           onBack={handleBackToList}
-          onAddEmployee={handleAddEmployee} // Pass the trigger to the detail view
+          onAddEmployee={handleAddEmployee}
+          partnerId={selectedPartnerId}
         />
       )}
 
       {/* 4. Add Employee Form */}
-      {view === 'add-employee' && (
+      {/* {view === 'add-employee' && (
         <AddEmployeeForm
           onBack={handleViewDetails} // Goes back to the specific Partner Details
           onBackToPartners={handleBackToList} // Goes all the way back to List
+        />
+      )} */}
+      {view === 'add-employee' && (
+        <AddEmployeeForm
+          onBack={() => setView('details')}
+          onBackToPartners={handleBackToList}
+          organizationId={selectedPartnerId} // Change 1: pass real partner id
         />
       )}
 
