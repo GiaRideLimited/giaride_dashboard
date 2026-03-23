@@ -182,7 +182,7 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (currentStep < 3) {
             setCurrentStep(currentStep + 1);
             return;
@@ -193,7 +193,7 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
         setError(null);
 
         const endpoint = entityType.toLowerCase() === 'driver' ? '/admin/add-driver' : '/admin/add-rider';
-        
+
         // Match the user's local format: 081... or 070...
         let cleanedPhone = formData.phone.replace(/\D/g, '');
         if (cleanedPhone.startsWith('234') && cleanedPhone.length > 10) {
@@ -207,7 +207,7 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
             phone_number: cleanedPhone,
             first_name: formData.firstName,
             last_name: formData.lastName,
-            organization_id: 10 // Added back as a common required field for multi-tenant APIs
+            // organization_id: 10 // Added back as a common required field for multi-tenant APIs
         };
 
         try {
@@ -246,12 +246,12 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div 
-                ref={modalContentRef} 
+            <div
+                ref={modalContentRef}
                 className="bg-white rounded-[24px] shadow-2xl p-8 w-full max-w-[500px] max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-200"
             >
-                <button 
-                    onClick={onClose} 
+                <button
+                    onClick={onClose}
                     className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors p-1"
                 >
                     <IoMdClose size={24} />
@@ -260,7 +260,7 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
                 <h2 className="text-2xl font-bold text-gray-900 mb-8">
                     Add {entityType}
                 </h2>
-                
+
                 <Stepper steps={steps} currentStep={currentStep} />
 
                 {error && (
@@ -285,14 +285,14 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
                                     <ModalInputField icon={<FiPhone />}>
                                         <div className="flex items-center w-full">
                                             <span className="text-sm text-gray-800 font-semibold mr-2">+234</span>
-                                            <input 
-                                                type="tel" 
+                                            <input
+                                                type="tel"
                                                 placeholder="Phone Number"
-                                                name="phone" 
-                                                value={formData.phone} 
+                                                name="phone"
+                                                value={formData.phone}
                                                 onChange={handleChange}
-                                                className="w-full text-sm text-gray-800 placeholder-gray-400 outline-none bg-transparent" 
-                                                required 
+                                                className="w-full text-sm text-gray-800 placeholder-gray-400 outline-none bg-transparent"
+                                                required
                                             />
                                         </div>
                                     </ModalInputField>
@@ -313,9 +313,9 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
                     {/* Step 2: Documents */}
                     {currentStep === 2 && (
                         <div className="space-y-6 pb-4">
-                           <UploadArea label="Driver's License" />
-                           <UploadArea label="Vehicle Insurance" />
-                           <UploadArea label="Road worthiness report" />
+                            <UploadArea label="Driver's License" />
+                            <UploadArea label="Vehicle Insurance" />
+                            <UploadArea label="Road worthiness report" />
                         </div>
                     )}
 
@@ -323,28 +323,28 @@ const AddDriverModal = ({ isOpen, onClose, entityType = "Driver", onAddSuccess }
                     {currentStep === 3 && (
                         <div className="space-y-8">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <ServiceTypeCard 
-                                    icon={<FaCarSide />} 
-                                    label="Driver" 
-                                    description="Earn money driving as taxi or ride hailing service within your state and its environs" 
-                                    type="ride_hailing" 
-                                    selectedType={formData.serviceType} 
+                                <ServiceTypeCard
+                                    icon={<FaCarSide />}
+                                    label="Driver"
+                                    description="Earn money driving as taxi or ride hailing service within your state and its environs"
+                                    type="ride_hailing"
+                                    selectedType={formData.serviceType}
                                     onSelect={handleServiceTypeSelect}
                                 />
-                                <ServiceTypeCard 
-                                    icon={<FaShippingFast />} 
-                                    label="Delivery" 
-                                    description="On demand delivery services for customers within your state" 
-                                    type="logistics" 
-                                    selectedType={formData.serviceType} 
+                                <ServiceTypeCard
+                                    icon={<FaShippingFast />}
+                                    label="Delivery"
+                                    description="On demand delivery services for customers within your state"
+                                    type="logistics"
+                                    selectedType={formData.serviceType}
                                     onSelect={handleServiceTypeSelect}
                                 />
-                                <ServiceTypeCard 
-                                    icon={<FaBusAlt />} 
-                                    label="Intercity Journey" 
-                                    description="Bus or taxi services for inter state or long distance journey" 
-                                    type="travel" 
-                                    selectedType={formData.serviceType} 
+                                <ServiceTypeCard
+                                    icon={<FaBusAlt />}
+                                    label="Intercity Journey"
+                                    description="Bus or taxi services for inter state or long distance journey"
+                                    type="travel"
+                                    selectedType={formData.serviceType}
                                     onSelect={handleServiceTypeSelect}
                                 />
                             </div>

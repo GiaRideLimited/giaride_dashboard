@@ -24,7 +24,7 @@ const rideHistoryData = [
     { id: 'R-105', pickup: 'Gbagada, Lagos', dest: 'Oshodi, Lagos', customer: 'Bolu T.', length: '10km', fare: '₦4,000', status: 'Completed', statusCode: 'completed' },
 ];
 
-const DriverDetailsView = ({ id, onBack }) => {
+const DriverDetailsView = ({ reference, onBack }) => {
     const [activeTab, setActiveTab] = useState('Other Details');
     const [driver, setDriver] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +35,7 @@ const DriverDetailsView = ({ id, onBack }) => {
 
     const fetchDriverDetails = () => {
         setIsLoading(true);
-        const endpoint = `${BASE_URL}/admin/driver/${id}`;
+        const endpoint = `${BASE_URL}/admin/driver/${reference}`;
         fetch(endpoint)
             .then((response) => {
                 if (!response.ok) {
@@ -55,15 +55,15 @@ const DriverDetailsView = ({ id, onBack }) => {
     };
 
     useEffect(() => {
-        if (!id) return;
+        if (!reference) return;
         fetchDriverDetails();
-    }, [id]);
+    }, [reference]);
 
     const handleDeactivate = () => {
         if (!window.confirm(`Are you sure you want to deactivate this driver?`)) return;
         
         setIsActionLoading(true);
-        const endpoint = `${BASE_URL}/admin/deactivate-driver/${id}`;
+        const endpoint = `${BASE_URL}/admin/deactivate-driver/${reference}`;
         
         fetch(endpoint, {
             method: 'PATCH',

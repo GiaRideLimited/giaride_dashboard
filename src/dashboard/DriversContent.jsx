@@ -5,10 +5,9 @@ import { IoMdAdd } from 'react-icons/io';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 
 // Import the modal
-import AddDriverModal from './AddDriverModal'; // Assuming it's in the same directory or adjust path
+import AddDriverModal from './AddDriverModal';
 import DriverDetailsView from './driver/DriverDetailsView';
 
-// Helper component for the "Today" tag
 const TodayTag = () => (
     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
         Today
@@ -24,7 +23,7 @@ const DriversContent = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [ridersStats, setRidersStats] = useState(null);
-    const [selectedDriverId, setSelectedDriverId] = useState(null);
+    const [selectedDriverRef, setSelectedDriverRef] = useState(null);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -85,8 +84,8 @@ const DriversContent = () => {
         setIsModalOpen(false);
     };
 
-    if (selectedDriverId) {
-        return <DriverDetailsView id={selectedDriverId} onBack={() => setSelectedDriverId(null)} />;
+    if (selectedDriverRef) {
+        return <DriverDetailsView reference={selectedDriverRef} onBack={() => setSelectedDriverRef(null)} />;
     }
 
     return (
@@ -177,7 +176,7 @@ const DriversContent = () => {
                                     <tr
                                         key={driver.id}
                                         className="bg-white border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                                        onClick={() => setSelectedDriverId(driver.id)}
+                                        onClick={() => setSelectedDriverRef(driver.reference)}
                                     >
                                         <td className="px-4 py-2">{index + 1}</td>
                                         <td className="px-4 py-2">{driver.car_number_plate || 'N/A'}</td>
