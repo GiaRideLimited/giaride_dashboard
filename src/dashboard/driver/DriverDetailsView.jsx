@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import { BsCarFront } from 'react-icons/bs';
 import { BsThreeDots } from 'react-icons/bs';
+import EditDriverModal from './EditDriverModal';
 
 const tabs = ['Other Details', 'Ride History', 'Earnings History', 'Documents'];
 
@@ -30,6 +31,7 @@ const DriverDetailsView = ({ reference, onBack }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -158,7 +160,10 @@ const DriverDetailsView = ({ reference, onBack }) => {
                     >
                         {isActionLoading ? 'Processing...' : 'Deactivate Driver'}
                     </button>
-                    <button className="flex-1 md:flex-none px-6 py-2.5 bg-black text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer">
+                    <button 
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="flex-1 md:flex-none px-6 py-2.5 bg-black text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+                    >
                         Edit Driver
                     </button>
                 </div>
@@ -319,6 +324,14 @@ const DriverDetailsView = ({ reference, onBack }) => {
                     )}
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            <EditDriverModal 
+                isOpen={isEditModalOpen} 
+                onClose={() => setIsEditModalOpen(false)} 
+                driver={driver} 
+                onUpdateSuccess={fetchDriverDetails} 
+            />
         </div>
     );
 };
