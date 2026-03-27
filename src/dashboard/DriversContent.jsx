@@ -272,7 +272,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd } from 'react-icons/io';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiEye, FiPauseCircle, FiBell } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import AddDriverModal from './AddDriverModal';
@@ -297,8 +297,18 @@ const DriversContent = () => {
     const [error, setError] = useState(null);
     const [driversStats, setDriversStats] = useState(null);
     const [selectedDriverRef, setSelectedDriverRef] = useState(null);
+    const [openDropdownId, setOpenDropdownId] = useState(null);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = () => setOpenDropdownId(null);
+        if (openDropdownId) {
+            window.addEventListener('click', handleClickOutside);
+        }
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, [openDropdownId]);
 
     // --- Fetch Drivers with Pagination ---
     const fetchDrivers = useCallback((page = 1) => {
@@ -372,9 +382,39 @@ const DriversContent = () => {
     const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, 'Pending'];
 
     const handleAddDriverSubmit = () => {
-        fetchDrivers(1);
+        fetchDrivers(currentPage);
         setIsModalOpen(false);
         toast.success("Driver added successfully!");
+    };
+
+    const handleStatusUpdate = (reference, currentStatus, firstName) => {
+        const isActive = currentStatus === 'active';
+        const action = isActive ? 'deactivate' : 'activate';
+        if (!window.confirm(`Are you sure you want to ${action} ${firstName}'s account?`)) return;
+
+        const token = localStorage.getItem('token');
+        const endpoint = `${BASE_URL}/admin/update-driver-status/${reference}`;
+
+        toast.promise(
+            fetch(endpoint, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: !isActive })
+            }).then(response => {
+                if (!response.ok) throw new Error(`Failed to ${action} driver`);
+                return response.json();
+            }).then(() => {
+                fetchDrivers(currentPage);
+            }),
+            {
+                loading: `${action === 'activate' ? 'Activating' : 'Deactivating'} driver...`,
+                success: `Driver ${action}d successfully!`,
+                error: (err) => err.message
+            }
+        );
     };
 
     const handlePreviousPage = () => {
@@ -533,10 +573,55 @@ const DriversContent = () => {
                                             <td className="px-4 py-4 font-medium text-gray-900 text-right">
                                                 ₦{Number(driver.total_credits || 0).toLocaleString()}
                                             </td>
-                                            <td className="px-4 py-4 text-center">
-                                                <button className="text-gray-400 hover:text-gray-900 p-1 transition-colors" onClick={(e) => e.stopPropagation()}>
+                                            <td className="px-4 py-4 text-center relative">
+                                                <button 
+                                                    className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenDropdownId(openDropdownId === driver.id ? null : driver.id);
+                                                    }}
+                                                >
                                                     <BsThreeDotsVertical size={18} />
                                                 </button>
+
+                                                {openDropdownId === driver.id && (
+                                                    <div 
+                                                        className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <button 
+                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                            onClick={() => {
+                                                                setSelectedDriverRef(driver.reference);
+                                                                setOpenDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <FiEye size={16} className="text-gray-400" />
+                                                            View Profile
+                                                        </button>
+                                                        <button 
+                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                            onClick={() => {
+                                                                handleStatusUpdate(driver.reference, driver.status, driver.first_name);
+                                                                setOpenDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <FiPauseCircle size={16} className={driver.status === 'active' ? "text-red-400" : "text-green-400"} />
+                                                            {driver.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
+                                                        </button>
+                                                        <div className="border-t border-gray-50 my-1"></div>
+                                                        <button 
+                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                            onClick={() => {
+                                                                toast.success(`Sending notification to ${driver.first_name}`);
+                                                                setOpenDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <FiBell size={16} className="text-gray-400" />
+                                                            Send Notifications
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     );

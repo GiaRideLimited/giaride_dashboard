@@ -252,7 +252,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd } from 'react-icons/io';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiEye, FiPauseCircle, FiBell } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import AddDriverModal from './AddDriverModal';
@@ -277,8 +277,18 @@ const RidersContent = () => {
     const [error, setError] = useState(null);
     const [ridersStats, setRidersStats] = useState(null);
     const [selectedRiderRef, setSelectedRiderRef] = useState(null);
+    const [openDropdownId, setOpenDropdownId] = useState(null);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = () => setOpenDropdownId(null);
+        if (openDropdownId) {
+            window.addEventListener('click', handleClickOutside);
+        }
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, [openDropdownId]);
 
     const fetchRiders = useCallback((page = 1) => {
         setIsLoading(true);
@@ -348,9 +358,39 @@ const RidersContent = () => {
     const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, 'Pending'];
 
     const handleAddRiderSubmit = () => {
-        fetchRiders(1);
+        fetchRiders(currentPage);
         setIsModalOpen(false);
         toast.success("Rider added successfully!");
+    };
+
+    const handleStatusUpdate = (reference, currentStatus, firstName) => {
+        const isActive = currentStatus === 'active';
+        const action = isActive ? 'deactivate' : 'activate';
+        if (!window.confirm(`Are you sure you want to ${action} ${firstName}'s account?`)) return;
+
+        const token = localStorage.getItem('token');
+        const endpoint = `${BASE_URL}/admin/update-rider-status/${reference}`;
+
+        toast.promise(
+            fetch(endpoint, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: !isActive })
+            }).then(response => {
+                if (!response.ok) throw new new Error(`Failed to ${action} rider`);
+                return response.json();
+            }).then(() => {
+                fetchRiders(currentPage);
+            }),
+            {
+                loading: `${action === 'activate' ? 'Activating' : 'Deactivating'} rider...`,
+                success: `Rider ${action}d successfully!`,
+                error: (err) => err.message
+            }
+        );
     };
 
     const handlePreviousPage = () => {
@@ -508,10 +548,55 @@ const RidersContent = () => {
                                             <td className="px-4 py-4 font-medium text-gray-900 text-right">
                                                 ₦{Number(rider.total_credits || rider.total_debit || 0).toLocaleString()}
                                             </td>
-                                            <td className="px-4 py-4 text-center">
-                                                <button className="text-gray-400 hover:text-gray-900 p-1 transition-colors" onClick={(e) => e.stopPropagation()}>
+                                            <td className="px-4 py-4 text-center relative">
+                                                <button 
+                                                    className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenDropdownId(openDropdownId === rider.id ? null : rider.id);
+                                                    }}
+                                                >
                                                     <BsThreeDotsVertical size={18} />
                                                 </button>
+
+                                                {openDropdownId === rider.id && (
+                                                    <div 
+                                                        className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <button 
+                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                            onClick={() => {
+                                                                setSelectedRiderRef(rider.reference);
+                                                                setOpenDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <FiEye size={16} className="text-gray-400" />
+                                                            View Profile
+                                                        </button>
+                                                        <button 
+                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                            onClick={() => {
+                                                                handleStatusUpdate(rider.reference, rider.status, rider.first_name);
+                                                                setOpenDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <FiPauseCircle size={16} className={rider.status === 'active' ? "text-red-400" : "text-green-400"} />
+                                                            {rider.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
+                                                        </button>
+                                                        <div className="border-t border-gray-50 my-1"></div>
+                                                        <button 
+                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                            onClick={() => {
+                                                                toast.success(`Sending notification to ${rider.first_name}`);
+                                                                setOpenDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <FiBell size={16} className="text-gray-400" />
+                                                            Send Notifications
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     );
