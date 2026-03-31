@@ -278,6 +278,7 @@ const RidersContent = () => {
     const [ridersStats, setRidersStats] = useState(null);
     const [selectedRiderRef, setSelectedRiderRef] = useState(null);
     const [openDropdownId, setOpenDropdownId] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -446,6 +447,8 @@ const RidersContent = () => {
                             type="text"
                             placeholder={`Filter ${entityTypeForModal.toLowerCase()}s by name, ID, status`}
                             className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                     <button
@@ -506,8 +509,36 @@ const RidersContent = () => {
                                         Error: {error}
                                     </td>
                                 </tr>
-                            ) : ridersList.length > 0 ? (
-                                ridersList.map((rider, index) => {
+                            ) : (() => {
+                                const filteredRiders = ridersList.filter(rider => {
+                                    // Filter by Tab
+                                    if (activeTab === 'Pending' && rider.status !== 'pending') return false;
+
+                                    // Filter by Search Term
+                                    if (!searchTerm) return true;
+                                    const searchLower = searchTerm.toLowerCase();
+                                    const fullName = `${rider.first_name || ''} ${rider.last_name || ''}`.toLowerCase();
+                                    return (
+                                        fullName.includes(searchLower) ||
+                                        (rider.reference && rider.reference.toLowerCase().includes(searchLower)) ||
+                                        (rider.status && rider.status.toLowerCase().includes(searchLower)) ||
+                                        (rider.car_number_plate && rider.car_number_plate.toLowerCase().includes(searchLower)) ||
+                                        (rider.city && rider.city.toLowerCase().includes(searchLower)) ||
+                                        (rider.gender && rider.gender.toLowerCase().includes(searchLower))
+                                    );
+                                });
+
+                                if (filteredRiders.length === 0) {
+                                    return (
+                                        <tr>
+                                            <td colSpan="8" className="text-center py-10 text-gray-500">
+                                                No riders found.
+                                            </td>
+                                        </tr>
+                                    );
+                                }
+
+                                return filteredRiders.map((rider, index) => {
                                     const itemNumber = (currentPage - 1) * 10 + index + 1;
 
                                     return (
@@ -549,8 +580,8 @@ const RidersContent = () => {
                                                 ₦{Number(rider.total_credits || rider.total_debit || 0).toLocaleString()}
                                             </td>
                                             <td className="px-4 py-4 text-center relative">
-                                                <button 
-                                                    className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10" 
+                                                <button
+                                                    className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setOpenDropdownId(openDropdownId === rider.id ? null : rider.id);
@@ -560,11 +591,11 @@ const RidersContent = () => {
                                                 </button>
 
                                                 {openDropdownId === rider.id && (
-                                                    <div 
+                                                    <div
                                                         className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
-                                                        <button 
+                                                        <button
                                                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                             onClick={() => {
                                                                 setSelectedRiderRef(rider.reference);
@@ -574,7 +605,7 @@ const RidersContent = () => {
                                                             <FiEye size={16} className="text-gray-400" />
                                                             View Profile
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                             onClick={() => {
                                                                 handleStatusUpdate(rider.reference, rider.status, rider.first_name);
@@ -585,7 +616,7 @@ const RidersContent = () => {
                                                             {rider.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
                                                         </button>
                                                         <div className="border-t border-gray-50 my-1"></div>
-                                                        <button 
+                                                        <button
                                                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                             onClick={() => {
                                                                 toast.success(`Sending notification to ${rider.first_name}`);
@@ -600,14 +631,8 @@ const RidersContent = () => {
                                             </td>
                                         </tr>
                                     );
-                                })
-                            ) : (
-                                <tr>
-                                    <td colSpan="8" className="text-center py-10 text-gray-500">
-                                        No riders found.
-                                    </td>
-                                </tr>
-                            )}
+                                });
+                            })()}
                         </tbody>
                     </table>
                 </div>

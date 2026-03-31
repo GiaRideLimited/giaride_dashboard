@@ -298,6 +298,7 @@ const DriversContent = () => {
     const [driversStats, setDriversStats] = useState(null);
     const [selectedDriverRef, setSelectedDriverRef] = useState(null);
     const [openDropdownId, setOpenDropdownId] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -469,6 +470,8 @@ const DriversContent = () => {
                             type="text"
                             placeholder={`Filter ${entityTypeForModal.toLowerCase()}s by name, ID, status`}
                             className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                     <button
@@ -531,8 +534,36 @@ const DriversContent = () => {
                                         Error: {error}
                                     </td>
                                 </tr>
-                            ) : driversList.length > 0 ? (
-                                driversList.map((driver, index) => {
+                            ) : (() => {
+                                const filteredDrivers = driversList.filter(driver => {
+                                    // Filter by Tab
+                                    if (activeTab === 'Pending' && driver.status !== 'pending') return false;
+
+                                    // Filter by Search Term
+                                    if (!searchTerm) return true;
+                                    const searchLower = searchTerm.toLowerCase();
+                                    const fullName = `${driver.first_name || ''} ${driver.last_name || ''}`.toLowerCase();
+                                    return (
+                                        fullName.includes(searchLower) ||
+                                        (driver.reference && driver.reference.toLowerCase().includes(searchLower)) ||
+                                        (driver.status && driver.status.toLowerCase().includes(searchLower)) ||
+                                        (driver.car_number_plate && driver.car_number_plate.toLowerCase().includes(searchLower)) ||
+                                        (driver.city && driver.city.toLowerCase().includes(searchLower)) ||
+                                        (driver.gender && driver.gender.toLowerCase().includes(searchLower))
+                                    );
+                                });
+
+                                if (filteredDrivers.length === 0) {
+                                    return (
+                                        <tr>
+                                            <td colSpan="8" className="text-center py-10 text-gray-500">
+                                                No drivers found.
+                                            </td>
+                                        </tr>
+                                    );
+                                }
+
+                                return filteredDrivers.map((driver, index) => {
                                     const itemNumber = (currentPage - 1) * 10 + index + 1;
 
                                     return (
@@ -574,8 +605,8 @@ const DriversContent = () => {
                                                 ₦{Number(driver.total_credits || 0).toLocaleString()}
                                             </td>
                                             <td className="px-4 py-4 text-center relative">
-                                                <button 
-                                                    className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10" 
+                                                <button
+                                                    className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setOpenDropdownId(openDropdownId === driver.id ? null : driver.id);
@@ -585,11 +616,11 @@ const DriversContent = () => {
                                                 </button>
 
                                                 {openDropdownId === driver.id && (
-                                                    <div 
+                                                    <div
                                                         className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
-                                                        <button 
+                                                        <button
                                                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                             onClick={() => {
                                                                 setSelectedDriverRef(driver.reference);
@@ -599,7 +630,7 @@ const DriversContent = () => {
                                                             <FiEye size={16} className="text-gray-400" />
                                                             View Profile
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                             onClick={() => {
                                                                 handleStatusUpdate(driver.reference, driver.status, driver.first_name);
@@ -610,7 +641,7 @@ const DriversContent = () => {
                                                             {driver.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
                                                         </button>
                                                         <div className="border-t border-gray-50 my-1"></div>
-                                                        <button 
+                                                        <button
                                                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                             onClick={() => {
                                                                 toast.success(`Sending notification to ${driver.first_name}`);
@@ -625,14 +656,8 @@ const DriversContent = () => {
                                             </td>
                                         </tr>
                                     );
-                                })
-                            ) : (
-                                <tr>
-                                    <td colSpan="8" className="text-center py-10 text-gray-500">
-                                        No drivers found.
-                                    </td>
-                                </tr>
-                            )}
+                                });
+                            })()}
                         </tbody>
                     </table>
                 </div>

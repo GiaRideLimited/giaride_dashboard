@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'; // Added useEffect, useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd } from 'react-icons/io';
-import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs'; // Added for stepper in modal
+import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs';
 
 
-// Import the modal (assuming it's in the same directory or adjust path)
 import AddDriverModal from './AddDriverModal';
 
 // Helper component for the "Today" tag
