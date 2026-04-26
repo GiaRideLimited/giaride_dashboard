@@ -1,5 +1,6 @@
 // src/components/NotificationsContent.jsx
 import React, { useState, useRef, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd, IoMdClose } from 'react-icons/io'; // Added IoMdClose
 import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs'; // Added BsCheckCircleFill
@@ -19,10 +20,12 @@ const notificationsTableData = Array.from({ length: 10 }, (_, i) => ({
 const NewNotificationModal = ({ isOpen, onClose, onSubmitNotification }) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [sendTo, setSendTo] = useState('all_users'); // Default value
-  const [showSendToDropdown, setShowSendToDropdown] = useState(false);
+  const [userType, setUserType] = useState('RIDER');
+  const [reference, setReference] = useState('all');
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const modalContentRef = useRef(null);
-  const sendToDropdownRef = useRef(null);
+  const typeDropdownRef = useRef(null);
   const MAX_MESSAGE_LENGTH = 240;
 
   useEffect(() => {
@@ -38,8 +41,9 @@ const NewNotificationModal = ({ isOpen, onClose, onSubmitNotification }) => {
       document.addEventListener('mousedown', handleClickOutside);
       setTitle('');
       setMessage('');
-      setSendTo('all_users');
-      setShowSendToDropdown(false);
+      setUserType('RIDER');
+      setReference('all');
+      setShowTypeDropdown(false);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
     }
@@ -48,24 +52,28 @@ const NewNotificationModal = ({ isOpen, onClose, onSubmitNotification }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !message || !sendTo) {
-      alert("Please fill in all fields.");
+    if (!title || !message || !userType || !reference) {
+      toast.error("Please fill in all fields.");
       return;
     }
-    onSubmitNotification({ title, message, sendTo });
-    // onClose(); // Success modal will handle closing
+
+    setIsSubmitting(true);
+    try {
+      await onSubmitNotification({ title, message, userType, reference });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const sendToOptions = [
-    { value: 'user_driver', label: 'Send to a user/driver' },
-    { value: 'all_users_drivers', label: 'Send to all users/drivers' },
-    { value: 'drivers_only', label: 'Send to drivers only' },
-    { value: 'users_only', label: 'Send to users only' },
+  const userTypeOptions = [
+    { value: 'RIDER', label: 'Riders' },
+    { value: 'DRIVER', label: 'Drivers' },
+    { value: 'ALL', label: 'All Users' },
   ];
-  // The "Send to all users" is the default displayed text if sendTo is 'all_users'
-  const displaySendToLabel = sendTo === 'all_users' ? 'Send to all users' : sendToOptions.find(opt => opt.value === sendTo)?.label || 'Send to all users';
+
+  const displayTypeLabel = userTypeOptions.find(opt => opt.value === userType)?.label || 'Select Audience';
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 font-sans">
@@ -94,52 +102,60 @@ const NewNotificationModal = ({ isOpen, onClose, onSubmitNotification }) => {
             <label htmlFor="notificationMessage" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3.5 scale-75 top-3.5 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-3.5 peer-focus:scale-75 peer-focus:-translate-y-3.5 left-1.5">Message</label>
             <div className="absolute bottom-2 right-3 text-xs text-gray-400">{message.length}/{MAX_MESSAGE_LENGTH}</div>
           </div>
-          {/* Send To Dropdown */}
-          <div className="relative" ref={sendToDropdownRef}>
+          {/* User Type Dropdown */}
+          <div className="relative" ref={typeDropdownRef}>
             <button
               type="button"
-              onClick={() => setShowSendToDropdown(!showSendToDropdown)}
+              onClick={() => setShowTypeDropdown(!showTypeDropdown)}
               className="flex items-center justify-between w-full px-3.5 py-3 text-sm text-left bg-transparent rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
             >
-              <span className={sendTo ? "text-gray-900" : "text-gray-500"}>{displaySendToLabel}</span>
-              <FiChevronDown className={`text-gray-400 transition-transform duration-200 ${showSendToDropdown ? 'rotate-180' : ''}`} size={20} />
+              <span className="text-gray-900">{displayTypeLabel}</span>
+              <FiChevronDown className={`text-gray-400 transition-transform duration-200 ${showTypeDropdown ? 'rotate-180' : ''}`} size={20} />
             </button>
-            {showSendToDropdown && (
+            {showTypeDropdown && (
               <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-md shadow-lg z-10 border border-gray-200 py-1">
-                {/* Default option for 'Send to all users' if not in sendToOptions */}
-                <div
-                  onClick={() => { setSendTo('all_users'); setShowSendToDropdown(false); }}
-                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
-                >
-                  Send to all users
-                  {sendTo === 'all_users' && <div className="w-4 h-4 rounded-full border-2 border-black flex items-center justify-center"><div className="w-2 h-2 bg-black rounded-full"></div></div>}
-                  {sendTo !== 'all_users' && <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>}
-                </div>
-                {sendToOptions.map(opt => (
+                {userTypeOptions.map(opt => (
                   <div
                     key={opt.value}
-                    onClick={() => { setSendTo(opt.value); setShowSendToDropdown(false); }}
+                    onClick={() => { setUserType(opt.value); setShowTypeDropdown(false); if (opt.value === 'ALL') setReference('all'); }}
                     className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
                   >
                     {opt.label}
-                    {sendTo === opt.value && <div className="w-4 h-4 rounded-full border-2 border-black flex items-center justify-center"><div className="w-2 h-2 bg-black rounded-full"></div></div>}
-                    {sendTo !== opt.value && <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>}
+                    {userType === opt.value && <div className="w-4 h-4 rounded-full border-2 border-black flex items-center justify-center"><div className="w-2 h-2 bg-black rounded-full"></div></div>}
+                    {userType !== opt.value && <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>}
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <button type="submit" className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-3">
-            Send notification
+
+          {/* Reference Input */}
+          <div className="relative">
+            <input
+              type="text" id="notificationReference" value={reference} onChange={(e) => setReference(e.target.value)}
+              className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-1 focus:ring-black focus:border-black peer"
+              placeholder=" " required
+            />
+            <label htmlFor="notificationReference" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3.5 scale-75 top-3.5 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-3.5 peer-focus:scale-75 peer-focus:-translate-y-3.5 left-1.5">Reference (e.g. 'all' or specific ID)</label>
+          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-3 flex items-center justify-center ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Sending...
+              </>
+            ) : 'Send notification'}
           </button>
         </form>
       </div>
     </div>
   );
 };
-// --- End New Notification Modal Component ---
 
-// --- Success Modal Component ---
 const SuccessModal = ({ isOpen, onClose, message }) => {
   const modalContentRef = useRef(null);
   useEffect(() => {
@@ -168,7 +184,6 @@ const SuccessModal = ({ isOpen, onClose, message }) => {
     </div>
   );
 };
-// --- End Success Modal Component ---
 
 
 const NotificationsContent = () => {
@@ -206,29 +221,51 @@ const NotificationsContent = () => {
       });
   }, []);
 
-  console.log('data', data)
 
   const tabs = ['All Notifications', 'Account activation', 'Ride assignment', 'Document verification'];
 
-  const handleNewNotificationSubmit = (notificationData) => {
-    console.log("New Notification Submitted:", notificationData);
-    setSuccessMessage(`You have successfully sent a notification to ${notificationData.sendTo === 'all_users' ? 'all users' : notificationData.sendTo.replace(/_/g, ' ')}`);
-    setIsNewNotificationModalOpen(false); // Close the form modal
-    setIsSuccessModalOpen(true);        // Open the success modal
-
-    // Add to local table for demo purposes
-    const newNotificationEntry = {
-      id: `n${notificationsTableData.length + 1}`,
-      no: `${String(notificationsTableData.length + 1).padStart(2, '0')}`,
+  const handleNewNotificationSubmit = async (notificationData) => {
+    const token = localStorage.getItem('token');
+    const payload = {
+      userType: notificationData.userType,
+      reference: notificationData.reference,
       title: notificationData.title,
-      preview: notificationData.message.substring(0, 30) + (notificationData.message.length > 30 ? '...' : ''),
-      targetAudience: notificationData.sendTo === 'all_users' ? 'All users' : notificationData.sendTo.replace(/_/g, ' '),
-      status: 'Sent',
-      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-'),
+      content: notificationData.message,
     };
-    // This is not ideal for real apps, manage state properly with a global store or context/reducers
-    notificationsTableData.unshift(newNotificationEntry);
+
+    try {
+      const endpoint = `${BASE_URL}/admin/notification`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send notification');
+      }
+
+      const audienceLabel = notificationData.reference === 'all'
+        ? (notificationData.userType === 'ALL' ? 'all users' : `all ${notificationData.userType.toLowerCase()}s`)
+        : `user ${notificationData.reference}`;
+
+      setSuccessMessage(`You have successfully sent a notification to ${audienceLabel}`);
+      setIsNewNotificationModalOpen(false);
+      setIsSuccessModalOpen(true);
+      // Refresh by reloading or just skip since GET logic shouldn't change
+      // window.location.reload(); 
+      toast.success("Notification sent successfully!");
+    } catch (err) {
+      console.error("Submission error:", err);
+      toast.error(err.message || "Failed to send notification");
+    }
   };
+
+  console.log('data', data)
 
   return (
     <div className="text-gray-800">
@@ -265,7 +302,6 @@ const NotificationsContent = () => {
               <tr> <th scope="col" className="px-4 py-3">No.</th> <th scope="col" className="px-4 py-3">Title</th> <th scope="col" className="px-4 py-3">Preview</th> <th scope="col" className="px-4 py-3">Target/Audience</th> <th scope="col" className="px-4 py-3">Status</th> <th scope="col" className="px-4 py-3">Date</th> <th scope="col" className="px-4 py-3 text-center">Action</th> </tr>
             </thead>
             <tbody>
-              {/* data.data.data[0].title */}
               {data?.data?.data?.data.map((notification, index) => (
                 <tr key={notification.id} className="bg-white border-b border-gray-200 hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-900">{index + 1}</td>
@@ -273,22 +309,11 @@ const NotificationsContent = () => {
                   <td className="px-4 py-3">{notification.content ?? "--"}</td>
                   <td className="px-4 py-3">{notification.targetAudience ?? "--"}</td>
                   <td className="px-4 py-3">{notification.status ?? "--"}</td>
-                  {/* <td className="px-4 py-3">{notification.date ?? "--"}</td> */}
                   <td className="px-4 py-3">{formatDate(notification.created_at)}</td>
                   <td className="px-4 py-3 text-center"> <button className="text-gray-500 hover:text-gray-700"> <BsThreeDotsVertical size={18} /> </button> </td>
                 </tr>
               ))}
-              {/* {notificationsTableData.map((notification) => (
-                <tr key={notification.id} className="bg-white border-b border-gray-200 hover:bg-gray-50"> 
-                  <td className="px-4 py-3 text-gray-900">{notification.no}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{notification.title}</td>
-                  <td className="px-4 py-3">{notification.preview}</td>
-                  <td className="px-4 py-3">{notification.targetAudience}</td>
-                  <td className="px-4 py-3">{notification.status}</td>
-                  <td className="px-4 py-3">{notification.date}</td>
-                  <td className="px-4 py-3 text-center"> <button className="text-gray-500 hover:text-gray-700"> <BsThreeDotsVertical size={18} /> </button> </td>
-                </tr>
-              ))} */}
+
             </tbody>
           </table>
         </div>

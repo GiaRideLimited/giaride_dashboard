@@ -17,14 +17,6 @@ import EditRiderModal from './EditRiderModal';
 
 const tabs = ['Other Details', 'Ride History', 'Earnings History', 'Documents'];
 
-const rideHistoryData = [
-    { id: '01', pickup: 'Lekki Phase 1, Lagos', dest: 'Lokogoma, Abuja', customer: 'James Riley', length: '400km', fare: '₦200,000', status: 'In route', statusCode: 'route' },
-    { id: '02', pickup: 'Lekki Phase 1, Lagos', dest: 'Lokogoma, Abuja', customer: 'James Riley, Kola...', length: '400km', fare: '₦200,000', status: 'Completed', statusCode: 'completed' },
-    { id: '03', pickup: 'Lekki Phase 1, Lagos', dest: 'Lokogoma, Abuja', customer: 'James Riley', length: '400km', fare: '₦200,000', status: 'Completed', statusCode: 'completed' },
-    { id: '04', pickup: 'Lekki Phase 1, Lagos', dest: 'Lokogoma, Abuja', customer: 'James Riley', length: '400km', fare: '₦200,000', status: 'In route', statusCode: 'route' },
-    { id: '05', pickup: 'Lekki Phase 1, Lagos', dest: 'Lokogoma, Abuja', customer: 'James Riley', length: '400km', fare: '₦200,000', status: 'In route', statusCode: 'route' },
-];
-
 const RiderDetailsView = ({ reference, onBack }) => {
     const [activeTab, setActiveTab] = useState('Other Details');
     const [rider, setRider] = useState(null);
@@ -32,6 +24,10 @@ const RiderDetailsView = ({ reference, onBack }) => {
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [rideHistory, setRideHistory] = useState([]);
+    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+    const [earningsHistory, setEarningsHistory] = useState([]);
+    const [isEarningsLoading, setIsEarningsLoading] = useState(false);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -60,6 +56,49 @@ const RiderDetailsView = ({ reference, onBack }) => {
         if (!reference) return;
         fetchRiderDetails();
     }, [reference]);
+
+    useEffect(() => {
+        if (activeTab === 'Ride History' && reference) {
+            setIsHistoryLoading(true);
+            const endpoint = `${BASE_URL}/admin/rider-ride-history/${reference}`;
+            fetch(endpoint)
+                .then((response) => {
+                    if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+                    return response.json();
+                })
+                .then((jsonData) => {
+                    // Adjusting for potential nesting seen in other components
+                    const history = jsonData?.data?.data || jsonData?.data || jsonData || [];
+                    setRideHistory(Array.isArray(history) ? history : []);
+                    setIsHistoryLoading(false);
+                })
+                .catch((err) => {
+                    console.error("History fetch error:", err);
+                    setIsHistoryLoading(false);
+                });
+        }
+    }, [activeTab, reference, BASE_URL]);
+
+    useEffect(() => {
+        if (activeTab === 'Earnings History' && reference) {
+            setIsEarningsLoading(true);
+            const endpoint = `${BASE_URL}/admin/rider-earning-history/${reference}`;
+            fetch(endpoint)
+                .then((response) => {
+                    if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+                    return response.json();
+                })
+                .then((jsonData) => {
+                    const history = jsonData?.data?.data || jsonData?.data || jsonData || [];
+                    setEarningsHistory(Array.isArray(history) ? history : []);
+                    setIsEarningsLoading(false);
+                })
+                .catch((err) => {
+                    console.error("Earnings fetch error:", err);
+                    setIsEarningsLoading(false);
+                });
+        }
+    }, [activeTab, reference, BASE_URL]);
 
     const handleToggleStatus = () => {
         const isActive = rider.status === 'active';
@@ -296,19 +335,48 @@ const RiderDetailsView = ({ reference, onBack }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {rideHistoryData.map((ride, idx) => (
-                                            <tr key={idx} className="group hover:bg-gray-50/50 transition-colors">
-                                                <td className="px-4 py-4 text-gray-900 font-bold border-b border-gray-50 group-last:border-none">{ride.id}</td>
-                                                <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">{ride.pickup}</td>
-                                                <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">{ride.dest}</td>
-                                                <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">{ride.customer}</td>
-                                                <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">{ride.length}</td>
-                                                <td className="px-4 py-4 text-gray-900 font-semibold border-b border-gray-50 group-last:border-none">{ride.fare}</td>
-                                                <td className="px-4 py-4 border-b border-gray-50 group-last:border-none">
-                                                    <StatusBadge status={ride.status} />
+                                        {isHistoryLoading ? (
+                                            <tr>
+                                                <td colSpan="7" className="text-center py-10">
+                                                    <div className="flex justify-center items-center gap-2">
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-500"></div>
+                                                        <span className="text-gray-400">Loading history...</span>
+                                                    </div>
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : rideHistory.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="text-center py-10 text-gray-400">
+                                                    No ride history available.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            rideHistory.map((ride, idx) => (
+                                                <tr key={idx} className="group hover:bg-gray-50/50 transition-colors">
+                                                    <td className="px-4 py-4 text-gray-900 font-bold border-b border-gray-50 group-last:border-none">
+                                                        {String(idx + 1).padStart(2, '0')}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">
+                                                        {ride.pickup_address || ride.pickup || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">
+                                                        {ride.destination_address || ride.dest || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">
+                                                        {ride.driver_name || ride.customer || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none">
+                                                        {ride.distance || ride.length || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-900 font-semibold border-b border-gray-50 group-last:border-none">
+                                                        ₦{Number(ride.fare || ride.total_fare || 0).toLocaleString()}
+                                                    </td>
+                                                    <td className="px-4 py-4 border-b border-gray-50 group-last:border-none">
+                                                        <StatusBadge status={ride.status} />
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -326,7 +394,69 @@ const RiderDetailsView = ({ reference, onBack }) => {
                         </div>
                     )}
 
-                    {activeTab !== 'Ride History' && activeTab !== 'Other Details' && (
+                    {activeTab === 'Earnings History' && (
+                        <div className="flex flex-col gap-6">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm border-separate border-spacing-y-2">
+                                    <thead className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50/50">
+                                        <tr>
+                                            <th className="px-4 py-3 first:rounded-l-lg">No.</th>
+                                            <th className="px-4 py-3">Reference</th>
+                                            <th className="px-4 py-3">Amount</th>
+                                            <th className="px-4 py-3">Type</th>
+                                            <th className="px-4 py-3">Status</th>
+                                            <th className="px-4 py-3 last:rounded-r-lg">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {isEarningsLoading ? (
+                                            <tr>
+                                                <td colSpan="6" className="text-center py-10">
+                                                    <div className="flex justify-center items-center gap-2">
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-500"></div>
+                                                        <span className="text-gray-400">Loading history...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : earningsHistory.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="6" className="text-center py-10 text-gray-400">
+                                                    No history available.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            earningsHistory.map((earning, idx) => (
+                                                <tr key={idx} className="group hover:bg-gray-50/50 transition-colors">
+                                                    <td className="px-4 py-4 text-gray-900 font-bold border-b border-gray-50 group-last:border-none">
+                                                        {String(idx + 1).padStart(2, '0')}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none font-medium uppercase text-xs">
+                                                        {earning.reference || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-900 font-bold border-b border-gray-50 group-last:border-none">
+                                                        ₦{Number(earning.amount || 0).toLocaleString()}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-500 border-b border-gray-50 group-last:border-none text-xs">
+                                                        {earning.payment_type || earning.type || 'Transaction'}
+                                                    </td>
+                                                    <td className="px-4 py-4 border-b border-gray-50 group-last:border-none">
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${earning.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                            {earning.status || 'Success'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-4 text-gray-400 border-b border-gray-50 group-last:border-none text-xs">
+                                                        {earning.created_at ? new Date(earning.created_at).toLocaleDateString() : 'N/A'}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab !== 'Ride History' && activeTab !== 'Other Details' && activeTab !== 'Earnings History' && (
                         <div className="py-24 text-center">
                             <p className="text-gray-400 font-medium">Content for {activeTab} will be displayed here.</p>
                         </div>
