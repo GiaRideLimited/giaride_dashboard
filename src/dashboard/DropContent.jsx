@@ -4,9 +4,7 @@ import { IoMdAdd } from 'react-icons/io';
 import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs';
 
 
-import AddDriverModal from './AddDriverModal';
 
-// Helper component for the "Today" tag
 const TodayTag = () => (
     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
         Today
@@ -69,7 +67,7 @@ const DropContent = () => {
             });
     }, []);
 
-    console.log("RidersContent stats:", ridersStats);
+    console.log("data", data);
 
 
     const entityTypeForModal = "Rider";
