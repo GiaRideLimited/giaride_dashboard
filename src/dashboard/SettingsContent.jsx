@@ -14,6 +14,7 @@ import {
   FiFilter,
   FiArrowLeft,
 } from 'react-icons/fi';
+import MembersList from './settings/MembersList';
 
 const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -22,10 +23,9 @@ const SettingsNavItem = ({ icon, text, isActive, onClick }) => (
   <button
     onClick={onClick}
     className={`flex items-center w-full text-left px-4 py-2.5 my-1 rounded-lg transition-colors duration-150 text-sm relative
-      ${
-        isActive
-          ? 'bg-gray-100 text-gray-900 font-semibold'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+      ${isActive
+        ? 'bg-gray-100 text-gray-900 font-semibold'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
       }
     `}
   >
@@ -101,7 +101,7 @@ const ToggleSwitch = ({ label, enabled, onChange }) => (
 const ProfileInformationForm = () => { /* ... remains the same as previous version ... */
   const [formData, setFormData] = useState({ firstName: '', lastName: '', age: '', gender: '', email: '', phone: '+234', });
   const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
-  const genderOptions = [ { value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' }, ];
+  const genderOptions = [{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' },];
   return (
     <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
       <InputField placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
@@ -112,7 +112,7 @@ const ProfileInformationForm = () => { /* ... remains the same as previous versi
       <InputField icon={<FiPhone />}>
         <div className="flex items-center w-full">
           <span className="text-sm text-gray-700 mr-2 whitespace-nowrap">+234</span><span className="text-gray-400 mr-2">|</span>
-          <input type="tel" name="phone" value={formData.phone.startsWith('+234') ? formData.phone.substring(4) : formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: '+234' + e.target.value.replace(/\D/g, '') }))} className="w-full text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent"/>
+          <input type="tel" name="phone" value={formData.phone.startsWith('+234') ? formData.phone.substring(4) : formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: '+234' + e.target.value.replace(/\D/g, '') }))} className="w-full text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent" />
         </div>
       </InputField>
       <button type="submit" className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-6"> Save changes </button>
@@ -169,87 +169,87 @@ const PasswordSettingsForm = () => {
   );
 };
 
-const MembersList = ({ onAddNew }) => {
-  const members = [
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-    { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-  ];
+// const MembersList = ({ onAddNew }) => {
+//   const members = [
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
+//   ];
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-6">
-        <button className="flex items-center text-gray-500 text-xs border border-gray-200 rounded-lg px-4 py-2.5 hover:bg-gray-50 transition-colors">
-           <FiFilter className="mr-2" size={14} />
-           Filter by travel type, Gender, State
-        </button>
-        <button
-          onClick={onAddNew}
-          className="bg-[#FFD700] hover:bg-[#FFC700] text-black font-bold py-2.5 px-5 rounded-lg flex items-center text-sm transition-colors duration-200"
-        >
-          <FiPlus className="mr-2" size={18} />
-          Add New Admin
-        </button>
-      </div>
+//   return (
+//     <div className="space-y-4">
+//       <div className="flex justify-between items-center mb-6">
+//         <button className="flex items-center text-gray-500 text-xs border border-gray-200 rounded-lg px-4 py-2.5 hover:bg-gray-50 transition-colors">
+//           <FiFilter className="mr-2" size={14} />
+//           Filter by travel type, Gender, State
+//         </button>
+//         <button
+//           onClick={onAddNew}
+//           className="bg-[#FFD700] hover:bg-[#FFC700] text-black font-bold py-2.5 px-5 rounded-lg flex items-center text-sm transition-colors duration-200"
+//         >
+//           <FiPlus className="mr-2" size={18} />
+//           Add New Admin
+//         </button>
+//       </div>
 
-      <div className="bg-white rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">No.</th>
-                <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Email Address</th>
-                <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {members.map((member, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
-                  <td className="px-6 py-4 text-xs text-gray-500 font-medium">{String(index + 1).padStart(2, '0')}</td>
-                  <td className="px-6 py-4 text-xs text-gray-900 font-semibold">{member.name}</td>
-                  <td className="px-6 py-4 text-xs text-gray-600">{member.email}</td>
-                  <td className="px-6 py-4 text-xs text-gray-600">{member.role}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold py-2 px-6 rounded-lg transition-colors duration-200">
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <div className="flex justify-between items-center mt-6 px-2">
-        <span className="text-[10px] text-gray-400 font-medium">Page 1 of 1</span>
-        <div className="flex items-center gap-1">
-           <button className="p-1 text-gray-300 hover:text-gray-500"><FiChevronDown className="rotate-90" size={14} /></button>
-           <button className="w-6 h-6 flex items-center justify-center bg-gray-100 text-black text-[10px] rounded font-bold">1</button>
-           <button className="p-1 text-gray-300 hover:text-gray-500"><FiChevronDown className="-rotate-90" size={14} /></button>
-        </div>
-      </div>
-    </div>
-  );
-};
+//       <div className="bg-white rounded-xl overflow-hidden">
+//         <div className="overflow-x-auto">
+//           <table className="w-full text-left">
+//             <thead>
+//               <tr className="border-b border-gray-100">
+//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">No.</th>
+//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Email Address</th>
+//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody className="divide-y divide-gray-50">
+//               {members.map((member, index) => (
+//                 <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+//                   <td className="px-6 py-4 text-xs text-gray-500 font-medium">{String(index + 1).padStart(2, '0')}</td>
+//                   <td className="px-6 py-4 text-xs text-gray-900 font-semibold">{member.name}</td>
+//                   <td className="px-6 py-4 text-xs text-gray-600">{member.email}</td>
+//                   <td className="px-6 py-4 text-xs text-gray-600">{member.role}</td>
+//                   <td className="px-6 py-4 text-right">
+//                     <button className="bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold py-2 px-6 rounded-lg transition-colors duration-200">
+//                       Remove
+//                     </button>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <div className="flex justify-between items-center mt-6 px-2">
+//         <span className="text-[10px] text-gray-400 font-medium">Page 1 of 1</span>
+//         <div className="flex items-center gap-1">
+//           <button className="p-1 text-gray-300 hover:text-gray-500"><FiChevronDown className="rotate-90" size={14} /></button>
+//           <button className="w-6 h-6 flex items-center justify-center bg-gray-100 text-black text-[10px] rounded font-bold">1</button>
+//           <button className="p-1 text-gray-300 hover:text-gray-500"><FiChevronDown className="-rotate-90" size={14} /></button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 const NewMemberForm = ({ onBack }) => {
-  const [formData, setFormData] = useState({ 
-    first_name: '', 
-    last_name: '', 
-    email: '', 
-    phone_number: '', 
-    role: '', 
-    password: '' 
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone_number: '',
+    role: '',
+    password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -266,7 +266,7 @@ const NewMemberForm = ({ onBack }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.first_name || !formData.last_name || !formData.email || !formData.phone_number || !formData.role || !formData.password) {
       toast.error("Please fill in all fields");
       return;
@@ -303,7 +303,7 @@ const NewMemberForm = ({ onBack }) => {
 
   return (
     <div className="space-y-6">
-      <button 
+      <button
         onClick={onBack}
         className="flex items-center text-gray-400 hover:text-black transition-colors text-xs font-medium"
       >
@@ -311,54 +311,54 @@ const NewMemberForm = ({ onBack }) => {
       </button>
       <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputField 
-            placeholder="First Name" 
-            name="first_name" 
-            value={formData.first_name} 
-            onChange={handleChange} 
+          <InputField
+            placeholder="First Name"
+            name="first_name"
+            value={formData.first_name}
+            onChange={handleChange}
           />
-          <InputField 
-            placeholder="Last Name" 
-            name="last_name" 
-            value={formData.last_name} 
-            onChange={handleChange} 
+          <InputField
+            placeholder="Last Name"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
           />
         </div>
-        <InputField 
-          placeholder="Email Address" 
-          type="email" 
-          name="email" 
-          value={formData.email} 
-          onChange={handleChange} 
+        <InputField
+          placeholder="Email Address"
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
         />
-        <InputField 
-          placeholder="Phone Number" 
-          type="tel" 
-          name="phone_number" 
-          value={formData.phone_number} 
-          onChange={handleChange} 
+        <InputField
+          placeholder="Phone Number"
+          type="tel"
+          name="phone_number"
+          value={formData.phone_number}
+          onChange={handleChange}
           icon={<FiPhone />}
         />
-        <SelectField 
-          placeholder="Role" 
-          options={roleOptions} 
-          name="role" 
-          value={formData.role} 
-          onChange={handleChange} 
+        <SelectField
+          placeholder="Role"
+          options={roleOptions}
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
         />
-        <InputField 
-          placeholder="Password" 
+        <InputField
+          placeholder="Password"
           type={showPassword ? 'text' : 'password'}
-          name="password" 
-          value={formData.password} 
+          name="password"
+          value={formData.password}
           onChange={handleChange}
           icon={<FiLock />}
           onToggleVisibility={() => setShowPassword(!showPassword)}
           showPassword={showPassword}
         />
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           disabled={isLoading}
           className="w-full bg-black text-white font-bold text-sm py-4 px-6 rounded-xl hover:bg-gray-800 transition-colors duration-150 mt-8 shadow-lg shadow-black/10 disabled:opacity-70 disabled:cursor-not-allowed"
         >
@@ -414,9 +414,9 @@ const SettingsContent = () => {
     { text: 'My Profile', icon: <FiUser />, content: <ProfileInformationForm /> },
     { text: 'Password', icon: <FiLock />, content: <PasswordSettingsForm /> },
     { text: 'Settings', icon: <FiSettings />, content: <GeneralSettingsForm /> },
-    { 
-      text: 'Members', 
-      icon: <FiUsers />, 
+    {
+      text: 'Members',
+      icon: <FiUsers />,
       content: membersView === 'list' ? (
         <MembersList onAddNew={() => setMembersView('add')} />
       ) : (
@@ -457,7 +457,7 @@ const SettingsContent = () => {
         <h1 className="text-3xl sm:text-4xl font-bold text-black mb-10">
           {getTitle()}
         </h1>
-        
+
         {(activeSetting === "My Profile" || activeSetting === "Password" || (activeSetting === "Members" && membersView === "add")) && (
           <h2 className="text-md font-semibold text-gray-800 mb-6">
             Personal Information
@@ -468,7 +468,7 @@ const SettingsContent = () => {
             Notifications Management
           </h2>
         )}
-        
+
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           {currentContent}
         </div>

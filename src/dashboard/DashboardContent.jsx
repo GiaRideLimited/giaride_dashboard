@@ -58,7 +58,7 @@ const DashboardContent = () => {
   const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
   useEffect(() => {
-    const endpoint = (`${BASE_URL}/admin/active-rides?from=2025-06-19&status=start-trip`); 
+    const endpoint = (`${BASE_URL}/admin/active-rides?from=2025-06-19&status=start-trip`);
     fetch(endpoint)
       .then((response) => {
         if (!response.ok) {
@@ -97,7 +97,6 @@ const DashboardContent = () => {
       });
   }, []);
 
-  // console.log('DashboardStats', dashboardStats?.data?.income.current)
   console.log('DashboardStats', dashboardStats)
 
 
