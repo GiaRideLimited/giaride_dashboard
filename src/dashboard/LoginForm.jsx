@@ -7,12 +7,12 @@ import {
   HiOutlineEyeOff,
   HiOutlineArrowSmRight
 } from 'react-icons/hi';
-import login_img from "../assets/travel-org.png"; 
+import login_img from "../assets/travel-org.png";
 
 const LoginForm = ({ onLoginSuccess, onSwitchToSignup }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Form State
   const [formData, setFormData] = useState({
     email: '',
@@ -30,7 +30,7 @@ const LoginForm = ({ onLoginSuccess, onSwitchToSignup }) => {
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.email || !formData.password) {
       toast.error("Please fill in all fields");
@@ -54,13 +54,18 @@ const LoginForm = ({ onLoginSuccess, onSwitchToSignup }) => {
         throw new Error(data.message || "Login failed");
       }
 
-      // Success
+      const token = data.data?.accessToken;
+
+      if (!token) {
+        throw new Error("No token received from server");
+      }
+
+      localStorage.setItem('accessToken', token);
+
       toast.success("Login successful!");
-      
-      // Assuming the API returns a token in data.token or data.data.token
-      // Adjust 'data.token' below based on your actual API response structure
-      const token = data.token || data.data?.token || "dummy-token"; 
-      
+      // const token = data.token || data.data?.token || "dummy-token";
+
+
       // Navigate to Dashboard via parent callback
       setTimeout(() => {
         onLoginSuccess(token);
@@ -75,15 +80,15 @@ const LoginForm = ({ onLoginSuccess, onSwitchToSignup }) => {
   };
 
   return (
-    <div className="max-w-[85%] mx-auto flex min-h-screen items-center justify-center"> 
+    <div className="max-w-[85%] mx-auto flex min-h-screen items-center justify-center">
 
       {/* Image Container - Hidden on small screens, visible on large */}
       <div className="hidden lg:block mr-10">
-        <img 
-          src={login_img} 
-          alt="Login illustration" 
-          className='h-[600px] w-[400px] rounded-[50px] object-cover shadow-xl' 
-        /> 
+        <img
+          src={login_img}
+          alt="Login illustration"
+          className='h-[600px] w-[400px] rounded-[50px] object-cover shadow-xl'
+        />
       </div>
 
       <div className="flex-1 flex justify-start max-w-md w-full">
@@ -150,7 +155,7 @@ const LoginForm = ({ onLoginSuccess, onSwitchToSignup }) => {
               <div className="mt-6 text-center">
                 <p className="text-gray-600 text-sm">
                   Don't have an account?{' '}
-                  <button 
+                  <button
                     type="button"
                     onClick={onSwitchToSignup}
                     className="text-black font-bold hover:underline"
@@ -164,7 +169,7 @@ const LoginForm = ({ onLoginSuccess, onSwitchToSignup }) => {
         </div>
       </div>
     </div>
-  ); 
+  );
 }
 
 export default LoginForm;

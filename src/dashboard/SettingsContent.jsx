@@ -15,6 +15,8 @@ import {
   FiArrowLeft,
 } from 'react-icons/fi';
 import MembersList from './settings/MembersList';
+import ProfileInformationForm from './settings/ProfileInformationForm';
+import PasswordSettingsForm from './settings/PasswordSettingsForm';
 
 const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -37,7 +39,6 @@ const SettingsNavItem = ({ icon, text, isActive, onClick }) => (
   </button>
 );
 
-// Input Field Component (reusable - updated for password toggle)
 const InputField = ({ placeholder, icon, type = 'text', value, onChange, name, children, onToggleVisibility, showPassword }) => (
   <div className="flex items-center border border-gray-300 rounded-lg px-3.5 py-2.5 focus-within:ring-1 focus-within:ring-black focus-within:border-black">
     {icon && React.cloneElement(icon, { size: 18, className: 'text-gray-500 mr-2.5 flex-shrink-0' })}
@@ -59,7 +60,6 @@ const InputField = ({ placeholder, icon, type = 'text', value, onChange, name, c
   </div>
 );
 
-// Select Field Component (reusable - remains the same)
 const SelectField = ({ placeholder, options, value, onChange, name }) => (
   <div className="relative flex items-center border border-gray-300 rounded-lg px-3.5 py-2.5 focus-within:ring-1 focus-within:ring-black focus-within:border-black">
     <select
@@ -77,7 +77,6 @@ const SelectField = ({ placeholder, options, value, onChange, name }) => (
   </div>
 );
 
-// Toggle Switch Component (for Notifications Management)
 const ToggleSwitch = ({ label, enabled, onChange }) => (
   <div className="flex items-center justify-between py-3">
     <span className="text-sm text-gray-700">{label}</span>
@@ -97,148 +96,52 @@ const ToggleSwitch = ({ label, enabled, onChange }) => (
   </div>
 );
 
+// const PasswordSettingsForm = () => {
+//   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+//   const [showCurrent, setShowCurrent] = useState(false);
+//   const [showNew, setShowNew] = useState(false);
+//   const [showConfirm, setShowConfirm] = useState(false);
 
-const ProfileInformationForm = () => { /* ... remains the same as previous version ... */
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', age: '', gender: '', email: '', phone: '+234', });
-  const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
-  const genderOptions = [{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' },];
-  return (
-    <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-      <InputField placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
-      <InputField placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
-      <InputField placeholder="Age" type="number" name="age" value={formData.age} onChange={handleChange} />
-      <SelectField placeholder="Gender" options={genderOptions} name="gender" value={formData.gender} onChange={handleChange} />
-      <InputField placeholder="Email" type="email" icon={<FiMail />} name="email" value={formData.email} onChange={handleChange} />
-      <InputField icon={<FiPhone />}>
-        <div className="flex items-center w-full">
-          <span className="text-sm text-gray-700 mr-2 whitespace-nowrap">+234</span><span className="text-gray-400 mr-2">|</span>
-          <input type="tel" name="phone" value={formData.phone.startsWith('+234') ? formData.phone.substring(4) : formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: '+234' + e.target.value.replace(/\D/g, '') }))} className="w-full text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent" />
-        </div>
-      </InputField>
-      <button type="submit" className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-6"> Save changes </button>
-    </form>
-  );
-};
-
-const PasswordSettingsForm = () => {
-  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  const handleChange = (e) => {
-    setPasswords({ ...passwords, [e.target.name]: e.target.value });
-  };
-
-  return (
-    <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-      <InputField
-        placeholder="Current Password"
-        type={showCurrent ? 'text' : 'password'}
-        name="current"
-        value={passwords.current}
-        onChange={handleChange}
-        onToggleVisibility={() => setShowCurrent(!showCurrent)}
-        showPassword={showCurrent}
-      />
-      <InputField
-        placeholder="New Password"
-        type={showNew ? 'text' : 'password'}
-        name="new"
-        value={passwords.new}
-        onChange={handleChange}
-        onToggleVisibility={() => setShowNew(!showNew)}
-        showPassword={showNew}
-      />
-      <InputField
-        placeholder="Confirm New Password"
-        type={showConfirm ? 'text' : 'password'}
-        name="confirm"
-        value={passwords.confirm}
-        onChange={handleChange}
-        onToggleVisibility={() => setShowConfirm(!showConfirm)}
-        showPassword={showConfirm}
-      />
-      <button
-        type="submit"
-        className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-6"
-      >
-        Save changes
-      </button>
-    </form>
-  );
-};
-
-// const MembersList = ({ onAddNew }) => {
-//   const members = [
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//     { name: 'John Doe', email: 'johndoe@giaride.com.ng', role: 'Super Admin' },
-//   ];
+//   const handleChange = (e) => {
+//     setPasswords({ ...passwords, [e.target.name]: e.target.value });
+//   };
 
 //   return (
-//     <div className="space-y-4">
-//       <div className="flex justify-between items-center mb-6">
-//         <button className="flex items-center text-gray-500 text-xs border border-gray-200 rounded-lg px-4 py-2.5 hover:bg-gray-50 transition-colors">
-//           <FiFilter className="mr-2" size={14} />
-//           Filter by travel type, Gender, State
-//         </button>
-//         <button
-//           onClick={onAddNew}
-//           className="bg-[#FFD700] hover:bg-[#FFC700] text-black font-bold py-2.5 px-5 rounded-lg flex items-center text-sm transition-colors duration-200"
-//         >
-//           <FiPlus className="mr-2" size={18} />
-//           Add New Admin
-//         </button>
-//       </div>
-
-//       <div className="bg-white rounded-xl overflow-hidden">
-//         <div className="overflow-x-auto">
-//           <table className="w-full text-left">
-//             <thead>
-//               <tr className="border-b border-gray-100">
-//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">No.</th>
-//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Email Address</th>
-//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Role</th>
-//                 <th className="px-6 py-4 text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody className="divide-y divide-gray-50">
-//               {members.map((member, index) => (
-//                 <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
-//                   <td className="px-6 py-4 text-xs text-gray-500 font-medium">{String(index + 1).padStart(2, '0')}</td>
-//                   <td className="px-6 py-4 text-xs text-gray-900 font-semibold">{member.name}</td>
-//                   <td className="px-6 py-4 text-xs text-gray-600">{member.email}</td>
-//                   <td className="px-6 py-4 text-xs text-gray-600">{member.role}</td>
-//                   <td className="px-6 py-4 text-right">
-//                     <button className="bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold py-2 px-6 rounded-lg transition-colors duration-200">
-//                       Remove
-//                     </button>
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-
-//       <div className="flex justify-between items-center mt-6 px-2">
-//         <span className="text-[10px] text-gray-400 font-medium">Page 1 of 1</span>
-//         <div className="flex items-center gap-1">
-//           <button className="p-1 text-gray-300 hover:text-gray-500"><FiChevronDown className="rotate-90" size={14} /></button>
-//           <button className="w-6 h-6 flex items-center justify-center bg-gray-100 text-black text-[10px] rounded font-bold">1</button>
-//           <button className="p-1 text-gray-300 hover:text-gray-500"><FiChevronDown className="-rotate-90" size={14} /></button>
-//         </div>
-//       </div>
-//     </div>
+//     <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+//       <InputField
+//         placeholder="Current Password"
+//         type={showCurrent ? 'text' : 'password'}
+//         name="current"
+//         value={passwords.current}
+//         onChange={handleChange}
+//         onToggleVisibility={() => setShowCurrent(!showCurrent)}
+//         showPassword={showCurrent}
+//       />
+//       <InputField
+//         placeholder="New Password"
+//         type={showNew ? 'text' : 'password'}
+//         name="new"
+//         value={passwords.new}
+//         onChange={handleChange}
+//         onToggleVisibility={() => setShowNew(!showNew)}
+//         showPassword={showNew}
+//       />
+//       <InputField
+//         placeholder="Confirm New Password"
+//         type={showConfirm ? 'text' : 'password'}
+//         name="confirm"
+//         value={passwords.confirm}
+//         onChange={handleChange}
+//         onToggleVisibility={() => setShowConfirm(!showConfirm)}
+//         showPassword={showConfirm}
+//       />
+//       <button
+//         type="submit"
+//         className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-full hover:bg-gray-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 mt-6"
+//       >
+//         Save changes
+//       </button>
+//     </form>
 //   );
 // };
 
