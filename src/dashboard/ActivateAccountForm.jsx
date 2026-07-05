@@ -8,13 +8,12 @@ import {
   HiOutlineEyeOff,
   HiOutlineArrowSmRight
 } from 'react-icons/hi';
-import login_img from "../assets/travel-org.png"; 
+import login_img from "../assets/travel-org.png";
 
 const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // State matching the API Payload
   const [formData, setFormData] = useState({
     email: initialEmail,
     registration_token: '',
@@ -30,7 +29,7 @@ const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.registration_token || !formData.password || !formData.email) {
       toast.error("Please fill in all fields");
       return;
@@ -54,7 +53,7 @@ const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
       }
 
       toast.success("Account activated! You can now log in.");
-      
+
       // Redirect to Login
       setTimeout(() => {
         onSwitchToLogin();
@@ -69,14 +68,14 @@ const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
   };
 
   return (
-    <div className="max-w-[85%] mx-auto flex min-h-screen items-center justify-center"> 
+    <div className="max-w-[85%] mx-auto flex min-h-screen items-center justify-center">
       {/* Image Container */}
       <div className="hidden lg:block mr-10">
-        <img 
-          src={login_img} 
-          alt="Activation illustration" 
-          className='h-[600px] w-[400px] rounded-[50px] object-cover shadow-xl' 
-        /> 
+        <img
+          src={login_img}
+          alt="Activation illustration"
+          className='h-[600px] w-[400px] rounded-[50px] object-cover shadow-xl'
+        />
       </div>
 
       <div className="flex-1 flex justify-start max-w-md w-full">
@@ -90,7 +89,7 @@ const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
             </p>
 
             <form onSubmit={handleSubmit}>
-              
+
               {/* Email Input (Read Only if passed from Signup) */}
               <div className="mb-6">
                 <div className="flex items-center border border-gray-400 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-black focus-within:border-transparent bg-gray-50">
@@ -103,7 +102,7 @@ const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
                     placeholder="Email Address"
                     required
                     // If email was passed from signup, make it read-only
-                    readOnly={!!initialEmail} 
+                    readOnly={!!initialEmail}
                     className={`w-full text-base text-gray-700 outline-none bg-transparent ${initialEmail ? 'cursor-not-allowed' : ''}`}
                   />
                 </div>
@@ -165,7 +164,7 @@ const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
               <div className="mt-6 text-center">
                 <p className="text-gray-600 text-sm">
                   Already activated?{' '}
-                  <button 
+                  <button
                     type="button"
                     onClick={onSwitchToLogin}
                     className="text-black font-bold hover:underline"
@@ -180,7 +179,7 @@ const ActivateAccountForm = ({ onSwitchToLogin, initialEmail = '' }) => {
         </div>
       </div>
     </div>
-  ); 
+  );
 }
 
 export default ActivateAccountForm;

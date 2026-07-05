@@ -6,13 +6,10 @@ const AddTravelOrganizationForm = ({ onBack }) => {
 
     const handleCreateClick = (e) => {
         e.preventDefault();
-        // Here you would typically handle form validation and submission
-        // For now, we'll just trigger the next UI flow
         setIsCreatingAccount(true);
     };
 
     if (isCreatingAccount) {
-        // When the flow is complete, the `onBack` function is called to return
         return <CreatePartnerAccount onComplete={onBack} />;
     }
     return (

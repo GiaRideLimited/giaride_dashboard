@@ -4,16 +4,13 @@ import { FiPlus, FiEdit2, FiArrowLeft } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { RiVisaLine } from 'react-icons/ri';
 
-// Change 2: Accept partnerId as a prop
 const PartnerDetailView = ({ onBack, onAddEmployee, partnerId }) => {
-    // Change 3: Add state for partner data
     const [partner, setPartner] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
-    // Change 4: Fetch partner details using the id
     useEffect(() => {
         if (!partnerId) return;
         fetch(`${BASE_URL}/admin/partner/${partnerId}`)
@@ -39,7 +36,6 @@ const PartnerDetailView = ({ onBack, onAddEmployee, partnerId }) => {
         </span>
     );
 
-    // Change 5: Show loading/error states
     if (isLoading) return <div className="p-8 text-gray-500">Loading...</div>;
     if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
