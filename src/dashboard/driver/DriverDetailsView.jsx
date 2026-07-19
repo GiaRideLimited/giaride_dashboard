@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
     FiPhone,
     FiMapPin,
@@ -17,7 +18,9 @@ import EditDriverModal from './EditDriverModal';
 
 const tabs = ['Other Details', 'Ride History', 'Earnings History', 'Documents'];
 
-const DriverDetailsView = ({ reference, onBack }) => {
+const DriverDetailsView = ({ reference: propReference, onBack }) => {
+    const params = useParams();
+    const reference = propReference || params.reference;
     const [activeTab, setActiveTab] = useState('Other Details');
     const [driver, setDriver] = useState(null);
     const [isLoading, setIsLoading] = useState(true);

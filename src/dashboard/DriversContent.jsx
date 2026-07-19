@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { TbFilter } from "react-icons/tb";
 import { IoMdAdd } from "react-icons/io";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -32,7 +33,6 @@ const DriversContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [driversStats, setDriversStats] = useState(null);
-  const [selectedDriverRef, setSelectedDriverRef] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -164,6 +164,8 @@ const DriversContent = () => {
     );
   };
 
+  const navigate = useNavigate();
+
   const handlePreviousPage = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
@@ -172,16 +174,7 @@ const DriversContent = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
-  if (selectedDriverRef) {
-    return (
-      <DriverDetailsView
-        reference={selectedDriverRef}
-        onBack={() => setSelectedDriverRef(null)}
-      />
-    );
-  }
-
-  return (
+  const listView = (
     <div className="text-gray-800 relative animate-fade-in">
       {/* Stats Header */}
       <div className="bg-[#F8F7F1] p-8">
@@ -272,10 +265,7 @@ const DriversContent = () => {
             <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
               <tr>
                 <th scope="col" className="px-4 py-4 font-medium">
-                  No.
-                </th>
-                <th scope="col" className="px-4 py-4 font-medium">
-                  Car no.
+                  Reference
                 </th>
                 <th scope="col" className="px-4 py-4 font-medium">
                   Driver Name
@@ -358,20 +348,15 @@ const DriversContent = () => {
                   }
 
                   return filteredDrivers.map((driver, index) => {
-                    const itemNumber = (currentPage - 1) * 10 + index + 1;
-
                     return (
                       <tr
                         key={driver.id}
                         className="bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
-                        onClick={() => setSelectedDriverRef(driver.reference)}
+                        onClick={() => navigate(`/drivers/${driver.reference}`)}
                       >
-                        <td className="px-4 py-4 font-medium text-gray-500">
-                          {String(itemNumber).padStart(2, "0")}
-                        </td>
                         <td className="px-4 py-4 font-medium text-gray-700">
                           <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                            {driver.car_number_plate || "--"}
+                            {driver.reference || "--"}
                           </span>
                         </td>
                         <td className="px-4 py-4">
@@ -428,7 +413,7 @@ const DriversContent = () => {
                               <button
                                 className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                 onClick={() => {
-                                  setSelectedDriverRef(driver.reference);
+                                  navigate(`/drivers/${driver.reference}`);
                                   setOpenDropdownId(null);
                                 }}
                               >
@@ -522,6 +507,13 @@ const DriversContent = () => {
         entityType={entityTypeForModal}
       />
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route index element={listView} />
+      <Route path=":reference" element={<DriverDetailsView onBack={() => navigate('/drivers')} />} />
+    </Routes>
   );
 };
 

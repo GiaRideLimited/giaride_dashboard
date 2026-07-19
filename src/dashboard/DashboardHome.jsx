@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, NavLink } from 'react-router-dom';
 
 import {
   BsLightningChargeFill,
@@ -44,16 +45,7 @@ import TravelOrgContent from './TravelOrg';
 
 
 const AdminDashboard = ({ onLogout }) => {
-  const [activeItem, setActiveItem] = useState('Dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
-
-  // Close sidebar when an item is clicked on mobile
-  const handleNavItemClick = (itemName) => {
-    setActiveItem(itemName);
-    if (window.innerWidth < 768) { // md breakpoint in Tailwind
-      setIsSidebarOpen(false);
-    }
-  };
 
   // Effect to handle window resize for sidebar visibility
   useEffect(() => {
@@ -72,63 +64,41 @@ const AdminDashboard = ({ onLogout }) => {
 
 
   const mainNavItemsData = [
-    { id: 'dashboard', text: 'Dashboard', icon: <RiLayoutGridFill size={18} /> },
-    { id: 'drivers', text: 'Drivers', icon: <FaUserTie size={18} /> },
-    { id: 'riders', text: 'Riders', icon: <FaUsers size={18} /> },
-    { id: 'drop', text: 'Drop', icon: <FaUsers size={18} /> },
-    { id: 'xend', text: 'Xend', icon: <FaUsers size={18} /> },
-    { id: 'errand', text: 'Errand', icon: <FaUsers size={18} /> },
-    { id: 'car', text: 'Car Rent', icon: <FaUsers size={18} /> },
+    { id: 'dashboard', text: 'Dashboard', path: '/', icon: <RiLayoutGridFill size={18} /> },
+    { id: 'drivers', text: 'Drivers', path: '/drivers', icon: <FaUserTie size={18} /> },
+    { id: 'riders', text: 'Riders', path: '/riders', icon: <FaUsers size={18} /> },
+    { id: 'drop', text: 'Drop', path: '/drop', icon: <FaUsers size={18} /> },
+    { id: 'xend', text: 'Xend', path: '/xend', icon: <FaUsers size={18} /> },
+    { id: 'errand', text: 'Errand', path: '/errand', icon: <FaUsers size={18} /> },
+    { id: 'car', text: 'Car Rent', path: '/car-rent', icon: <FaUsers size={18} /> },
 
-    { id: 'rides', text: 'Rides', icon: <FaCarSide size={18} /> },
+    { id: 'rides', text: 'Rides', path: '/rides', icon: <FaCarSide size={18} /> },
 
 
-    { id: 'bookings', text: 'Bookings', icon: <BsCalendarCheck size={18} /> },
-    { id: 'transactions', text: 'Transactions', icon: <BsCalendarCheck size={18} /> },
-    { id: 'partners', text: 'Partners', icon: <FiPartnersIcon size={18} /> },
-    { id: 'travel', text: 'Travel Org', icon: <FiPartnersIcon size={18} /> },
-    { id: 'notifications', text: 'Notifications', icon: <IoMdNotificationsOutline size={18} /> },
-    { id: 'settings', text: 'Settings', icon: <IoMdSettings size={18} /> },
+    { id: 'bookings', text: 'Bookings', path: '/bookings', icon: <BsCalendarCheck size={18} /> },
+    { id: 'transactions', text: 'Transactions', path: '/transactions', icon: <BsCalendarCheck size={18} /> },
+    { id: 'partners', text: 'Partners', path: '/partners', icon: <FiPartnersIcon size={18} /> },
+    { id: 'travel', text: 'Travel Org', path: '/travel-org', icon: <FiPartnersIcon size={18} /> },
+    { id: 'notifications', text: 'Notifications', path: '/notifications', icon: <IoMdNotificationsOutline size={18} /> },
+    { id: 'settings', text: 'Settings', path: '/settings', icon: <IoMdSettings size={18} /> },
   ];
 
   const reportNavItemsData = [
-    { id: 'car_report', text: 'Car Report', icon: <HiOutlineDocumentReport size={18} /> },
-    { id: 'support', text: 'Support', icon: <BiSupport size={18} /> },
+    { id: 'car_report', text: 'Car Report', path: '/car-report', icon: <HiOutlineDocumentReport size={18} /> },
+    { id: 'support', text: 'Support', path: '/support', icon: <BiSupport size={18} /> },
   ];
 
-  const NavItem = ({ item, isActive, onClick }) => (
-    <a
-      href="#"
-      onClick={(e) => { e.preventDefault(); onClick(item.text); }}
-      className={`flex items-center space-x-3 px-4 py-2.5 my-1 rounded-lg transition-colors duration-150 text-sm
+  const NavItem = ({ item }) => (
+    <NavLink
+      to={item.path}
+      onClick={() => { if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+      className={({ isActive }) => `flex items-center space-x-3 px-4 py-2.5 my-1 rounded-lg transition-colors duration-150 text-sm
         ${isActive ? 'bg-yellow-400 text-neutral-900 font-semibold' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'}`}
     >
       {item.icon}
       <span>{item.text}</span>
-    </a>
+    </NavLink>
   );
-
-  const renderContent = () => {
-    switch (activeItem) {
-      case 'Dashboard': return <DashboardContent />;
-      case 'Drivers': return <DriversContent />;
-      case 'Riders': return <RidersContent />;
-      case 'Drop': return <DropContent />;
-      case 'Car Rent': return <CarRentContent />;
-      case 'Xend': return <XendContent />;
-      case 'Errand': return <ErrandContent />;
-      case 'Bookings': return <BookingsContent />;
-      case 'Notifications': return <NotificationsContent />;
-      case 'Settings': return <SettingsContent />;
-      case 'Transactions': return <TransactionsContent />;
-      case 'Car Report': return <CarReportContent />;
-      case 'Support': return <SupportContent />;
-      case 'Rides': return <RidesContent />;
-      case 'Partners': return <PartnersContent />;
-      case 'Travel Org': return <TravelOrgContent />;
-      default: return <div>Select an item</div>;
-    }
-  };
 
   return (
     <div className="flex h-screen bg-neutral-100 font-sans overflow-hidden"> {/* Added overflow-hidden to parent */}
@@ -161,7 +131,7 @@ const AdminDashboard = ({ onLogout }) => {
         <div className="flex-1 overflow-y-auto pt-4">
           <nav className="px-4">
             {mainNavItemsData.map((item) => (
-              <NavItem key={item.id} item={item} isActive={activeItem === item.text} onClick={handleNavItemClick} />
+              <NavItem key={item.id} item={item} />
             ))}
           </nav>
           <div className="mt-4">
@@ -171,7 +141,7 @@ const AdminDashboard = ({ onLogout }) => {
             </div>
             <nav className="pb-4 px-4">
               {reportNavItemsData.map((item) => (
-                <NavItem key={item.id} item={item} isActive={activeItem === item.text} onClick={handleNavItemClick} />
+                <NavItem key={item.id} item={item} />
               ))}
             </nav>
           </div>
@@ -222,7 +192,25 @@ const AdminDashboard = ({ onLogout }) => {
 
         {/* Main Content Display */}
         <div className="flex-grow sm:p-6 md:p-8 md:pt-0">
-          {renderContent()}
+          <Routes>
+            <Route path="/" element={<DashboardContent />} />
+            <Route path="/drivers/*" element={<DriversContent />} />
+            <Route path="/riders/*" element={<RidersContent />} />
+            <Route path="/drop" element={<DropContent />} />
+            <Route path="/car-rent" element={<CarRentContent />} />
+            <Route path="/xend" element={<XendContent />} />
+            <Route path="/errand" element={<ErrandContent />} />
+            <Route path="/bookings" element={<BookingsContent />} />
+            <Route path="/notifications" element={<NotificationsContent />} />
+            <Route path="/settings" element={<SettingsContent />} />
+            <Route path="/transactions" element={<TransactionsContent />} />
+            <Route path="/car-report" element={<CarReportContent />} />
+            <Route path="/support" element={<SupportContent />} />
+            <Route path="/rides" element={<RidesContent />} />
+            <Route path="/partners/*" element={<PartnersContent />} />
+            <Route path="/travel-org" element={<TravelOrgContent />} />
+            <Route path="*" element={<DashboardContent />} />
+          </Routes>
         </div>
       </div>
       {/* --- Content Area End --- */}

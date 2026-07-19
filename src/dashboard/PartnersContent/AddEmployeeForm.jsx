@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { FiChevronRight } from 'react-icons/fi';
 
-const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId }) => {
+const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId: propOrganizationId }) => {
+    const params = useParams();
+    const organizationId = propOrganizationId || params.id;
     console.log("organizationId ", organizationId)
     // 1. State for form data matching API structure
     const [formData, setFormData] = useState({

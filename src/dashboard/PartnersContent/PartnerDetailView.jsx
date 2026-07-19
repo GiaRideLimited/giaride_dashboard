@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { TbFilter } from 'react-icons/tb';
 import { FiPlus, FiEdit2, FiArrowLeft } from 'react-icons/fi';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { RiVisaLine } from 'react-icons/ri';
 
-const PartnerDetailView = ({ onBack, onAddEmployee, partnerId }) => {
+const PartnerDetailView = ({ onBack: propOnBack, onAddEmployee: propOnAddEmployee, partnerId: propPartnerId }) => {
+    const params = useParams();
+    const navigate = useNavigate();
+    const partnerId = propPartnerId || params.id;
+    const onBack = propOnBack || (() => navigate('/partners'));
+    const onAddEmployee = propOnAddEmployee || (() => navigate(`/partners/${partnerId}/add-employee`));
+
     const [partner, setPartner] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);

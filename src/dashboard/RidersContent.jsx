@@ -249,6 +249,7 @@
 
 // src/components/RidersContent.jsx
 import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd } from 'react-icons/io';
 import { BsThreeDotsVertical } from 'react-icons/bs';
@@ -276,7 +277,6 @@ const RidersContent = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [ridersStats, setRidersStats] = useState(null);
-    const [selectedRiderRef, setSelectedRiderRef] = useState(null);
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -394,6 +394,7 @@ const RidersContent = () => {
         );
     };
 
+    const navigate = useNavigate();
     const handlePreviousPage = () => {
         if (currentPage > 1) setCurrentPage(prev => prev - 1);
     };
@@ -402,13 +403,9 @@ const RidersContent = () => {
         if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
     };
 
-    if (selectedRiderRef) {
-        return <RiderDetailsView reference={selectedRiderRef} onBack={() => setSelectedRiderRef(null)} />;
-    }
-
     const ridersList = data?.data?.data && Array.isArray(data.data.data) ? data.data.data : [];
 
-    return (
+    const listView = (
         <div className="text-gray-800 relative animate-fade-in">
             {/* Statistics Title & Cards */}
             <div className='bg-[#F8F7F1] p-8'>
@@ -482,8 +479,7 @@ const RidersContent = () => {
                     <table className="w-full min-w-[900px] text-sm text-left text-gray-600">
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
                             <tr>
-                                <th scope="col" className="px-4 py-4 font-medium">No.</th>
-                                <th scope="col" className="px-4 py-4 font-medium">Ride no.</th>
+                                <th scope="col" className="px-4 py-4 font-medium">Reference</th>
                                 <th scope="col" className="px-4 py-4 font-medium">Rider Name</th>
                                 <th scope="col" className="px-4 py-4 font-medium">Status</th>
                                 <th scope="col" className="px-4 py-4 font-medium">Gender</th>
@@ -545,14 +541,11 @@ const RidersContent = () => {
                                         <tr
                                             key={rider.id}
                                             className="bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
-                                            onClick={() => setSelectedRiderRef(rider.reference)}
+                                            onClick={() => navigate(`/riders/${rider.reference}`)}
                                         >
-                                            <td className="px-4 py-4 font-medium text-gray-500">
-                                                {String(itemNumber).padStart(2, '0')}
-                                            </td>
                                             <td className="px-4 py-4 font-medium text-gray-700">
                                                 <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                                                    {rider.car_number_plate || '--'}
+                                                    {rider.reference || '--'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4">
@@ -598,7 +591,7 @@ const RidersContent = () => {
                                                         <button
                                                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                             onClick={() => {
-                                                                setSelectedRiderRef(rider.reference);
+                                                                navigate(`/riders/${rider.reference}`);
                                                                 setOpenDropdownId(null);
                                                             }}
                                                         >
@@ -672,6 +665,13 @@ const RidersContent = () => {
                 entityType={entityTypeForModal}
             />
         </div>
+    );
+
+    return (
+        <Routes>
+            <Route index element={listView} />
+            <Route path=":reference" element={<RiderDetailsView onBack={() => navigate('/riders')} />} />
+        </Routes>
     );
 };
 
