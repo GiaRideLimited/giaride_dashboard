@@ -9,6 +9,7 @@ import {
   FiEye,
   FiPauseCircle,
   FiBell,
+  FiCopy,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -247,11 +248,10 @@ const DriversContent = () => {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium transition-colors
-                                    ${
-                                      activeTab === tab
-                                        ? "border-neutral-800 text-neutral-900"
-                                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                    }`}
+                                    ${activeTab === tab
+                    ? "border-neutral-800 text-neutral-900"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
               >
                 {tab}
               </button>
@@ -351,13 +351,28 @@ const DriversContent = () => {
                     return (
                       <tr
                         key={driver.id}
-                        className="bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
+                        className="group bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
                         onClick={() => navigate(`/drivers/${driver.reference}`)}
                       >
                         <td className="px-4 py-4 font-medium text-gray-700">
-                          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                            {driver.reference || "--"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                              {driver.reference || "--"}
+                            </span>
+                            {driver.reference && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(driver.reference);
+                                  toast.success("Reference copied!");
+                                }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
+                                title="Copy Reference"
+                              >
+                                <FiCopy size={14} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center">
@@ -372,7 +387,7 @@ const DriversContent = () => {
                             <span className="font-medium text-gray-900">
                               {driver.first_name || driver.last_name
                                 ? `${driver.first_name || ""} ${driver.last_name || ""}`
-                                : driver.username || "--"}
+                                : driver.username || ""}
                             </span>
                           </div>
                         </td>

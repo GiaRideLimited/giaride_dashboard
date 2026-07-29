@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd } from 'react-icons/io';
 import { BsThreeDotsVertical, BsCheckCircleFill } from 'react-icons/bs';
+import { FiCopy } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 
 const TodayTag = () => (
@@ -141,8 +143,7 @@ const XendContent = () => {
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
 
                             <tr>
-                                <th scope="col" className="px-4 py-3 font-medium">No.</th>
-                                <th scope="col" className="px-4 py-3 font-medium">Ride no.</th>
+                                <th scope="col" className="px-4 py-3 font-medium">Reference</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Rider Name</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Status</th>
                                 <th scope="col" className="px-4 py-3 font-medium">Gender</th>
@@ -155,9 +156,27 @@ const XendContent = () => {
                         {data?.data?.data?.length > 0 ? (
                             <tbody>
                                 {data?.data?.data?.map((driver, index) => (
-                                    <tr key={driver.id} className="bg-white border-b border-gray-100 hover:bg-gray-50">
-                                        <td className="px-4 py-2">{index + 1}</td>
-                                        <td className="px-4 py-2">{driver.car_number_plate || 'N/A'}</td>
+                                    <tr key={driver.id} className="group bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-4 font-medium text-gray-700">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                                                    {driver.reference || '--'}
+                                                </span>
+                                                {driver.reference && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigator.clipboard.writeText(driver.reference);
+                                                            toast.success("Reference copied!");
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
+                                                        title="Copy Reference"
+                                                    >
+                                                        <FiCopy size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="px-4 py-2">
                                             <div className="flex items-center">
 

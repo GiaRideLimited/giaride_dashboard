@@ -294,7 +294,6 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
                             <DetailItem label="Email Verified" value={rider.email_verified ? 'Yes' : 'No'} />
                             <DetailItem label="Phone Verified" value={rider.phone_number_verified ? 'Yes' : 'No'} />
                             <DetailItem label="Country" value={rider.country} />
-                            <DetailItem label="Temporary Password" value={rider.is_temporary_password ? 'Yes' : 'No'} />
                             <DetailItem label="Joined Date" value={rider.created_at ? new Date(rider.created_at).toLocaleDateString() : 'N/A'} />
                         </div>
                     )}
