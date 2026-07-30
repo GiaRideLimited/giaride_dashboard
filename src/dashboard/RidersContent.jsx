@@ -236,6 +236,7 @@ const RidersContent = () => {
                                 <th scope="col" className="px-4 py-4 font-medium">Gender</th>
                                 <th scope="col" className="px-4 py-4 font-medium">Location</th>
                                 <th scope="col" className="px-4 py-4 font-medium text-right">Expenditures</th>
+                                <th scope="col" className="px-4 py-4 font-medium">Date Joined</th>
                                 <th scope="col" className="px-4 py-4 font-medium text-center"></th>
                             </tr>
                         </thead>
@@ -337,6 +338,9 @@ const RidersContent = () => {
                                             <td className="px-4 py-4 text-gray-600">{rider.city || '--'}</td>
                                             <td className="px-4 py-4 font-medium text-gray-900 text-right">
                                                 ₦{Number(rider.total_credits || rider.total_debit || 0).toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-4 text-gray-500 whitespace-nowrap">
+                                                {rider.created_at ? new Date(rider.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '--'}
                                             </td>
                                             <td className="px-4 py-4 text-center relative">
                                                 <button

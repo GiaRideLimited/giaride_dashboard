@@ -458,7 +458,59 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
                         </div>
                     )}
 
-                    {activeTab !== 'Ride History' && activeTab !== 'Other Details' && activeTab !== 'Earnings History' && (
+                    {activeTab === 'Documents' && (
+                        <div className="flex flex-col gap-6">
+                            <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-800">Document Status</h3>
+                                    <p className="text-xs text-gray-500">Overall verification status of documents</p>
+                                </div>
+                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                                    rider.document_status === 'approved' || rider.verified 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : rider.document_status === 'declined'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                    {rider.document_status || (rider.verified ? 'Approved' : 'Pending/Unverified')}
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[
+                                    { label: 'Selfie Image', key: 'selfie_image' },
+                                    { label: 'Driver License (Front)', key: 'driver_license_front' },
+                                    { label: 'Driver License (Back)', key: 'driver_license_back' },
+                                    { label: 'Vehicle Insurance', key: 'vehicle_insurance' },
+                                    { label: 'Road Worthiness', key: 'vehicle_road_worthiness' },
+                                    { label: 'ID Card (Front)', key: 'id_card_front' },
+                                    { label: 'ID Card (Back)', key: 'id_card_back' },
+                                    { label: 'Rider/Driver Card', key: 'rider_driver_card' },
+                                ].map((doc, idx) => (
+                                    <div key={idx} className="border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col">
+                                        <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                                            <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{doc.label}</span>
+                                        </div>
+                                        <div className="p-4 flex-grow flex items-center justify-center bg-gray-50/30 min-h-[160px]">
+                                            {rider[doc.key] ? (
+                                                <a href={rider[doc.key]} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                                    <img 
+                                                        src={rider[doc.key]} 
+                                                        alt={doc.label} 
+                                                        className="w-full h-40 object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer border border-gray-200" 
+                                                    />
+                                                </a>
+                                            ) : (
+                                                <span className="text-sm text-gray-400 font-medium">Not uploaded</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab !== 'Ride History' && activeTab !== 'Other Details' && activeTab !== 'Earnings History' && activeTab !== 'Documents' && (
                         <div className="py-24 text-center">
                             <p className="text-gray-400 font-medium">Content for {activeTab} will be displayed here.</p>
                         </div>
