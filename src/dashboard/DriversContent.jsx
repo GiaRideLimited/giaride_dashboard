@@ -282,6 +282,9 @@ const DriversContent = () => {
                 <th scope="col" className="px-4 py-4 font-medium text-right">
                   Earning
                 </th>
+                <th scope="col" className="px-4 py-4 font-medium">
+                  Date Joined
+                </th>
                 <th
                   scope="col"
                   className="px-4 py-4 font-medium text-center"
@@ -406,6 +409,9 @@ const DriversContent = () => {
                         </td>
                         <td className="px-4 py-4 font-medium text-gray-900 text-right">
                           ₦{Number(driver.total_credits || 0).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-4 text-gray-500 whitespace-nowrap">
+                          {driver.created_at ? new Date(driver.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '--'}
                         </td>
                         <td className="px-4 py-4 text-center relative">
                           <button
