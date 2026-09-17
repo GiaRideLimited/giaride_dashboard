@@ -97,7 +97,7 @@ const DashboardContent = () => {
       });
   }, []);
 
-  console.log('DashboardStats', dashboardStats)
+  // console.log('DashboardStats', dashboardStats)
 
 
 

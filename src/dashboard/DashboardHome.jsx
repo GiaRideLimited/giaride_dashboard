@@ -34,9 +34,9 @@ import BookingsContent from './BookingsContent';
 import NotificationsContent from './NotificationsContent';
 import SettingsContent from './SettingsContent';
 import TransactionsContent from './TransactionsContent';
-import CarReportContent from './CarReportContent';
+// import CarReportContent from './CarReportContent';
 import SupportContent from './SupportContent';
-import RidesContent from './RidesContent'; 
+import RidesContent from './RidesContent';
 import PartnersContent from './PartnersContent';
 import XendContent from './XendContent';
 import CarRentContent from './CarRentContent';
@@ -45,7 +45,7 @@ import TravelOrgContent from './TravelOrg';
 
 
 const AdminDashboard = ({ onLogout }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Effect to handle window resize for sidebar visibility
   useEffect(() => {
@@ -84,7 +84,7 @@ const AdminDashboard = ({ onLogout }) => {
   ];
 
   const reportNavItemsData = [
-    { id: 'car_report', text: 'Car Report', path: '/car-report', icon: <HiOutlineDocumentReport size={18} /> },
+    // { id: 'car_report', text: 'Car Report', path: '/car-report', icon: <HiOutlineDocumentReport size={18} /> },
     { id: 'support', text: 'Support', path: '/support', icon: <BiSupport size={18} /> },
   ];
 
@@ -151,19 +151,19 @@ const AdminDashboard = ({ onLogout }) => {
       {/* --- Content Area Start --- */}
       <div className="flex-1 bg-white flex flex-col overflow-y-auto"> {/* Changed bg to white, was neutral-100 */}
         {/* Header for Content Area */}
-   
 
-        <div className="flex justify-between items-center p-4 sm:p-6 md:px-8 border-b border-gray-200 md:border-none flex-shrink-0"> 
+
+        <div className="flex justify-between items-center p-4 sm:p-6 md:px-8 border-b border-gray-200 md:border-none flex-shrink-0">
           {/* Hamburger Menu for Mobile */}
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden text-gray-600 hover:text-gray-800 mr-4">
             <RiMenuFill size={24} />
           </button>
 
           {/* Right Side Icons */}
-          <div className="flex items-center ml-auto"> 
-            
+          <div className="flex items-center ml-auto">
+
             {/* Search Bar */}
-            <div className="hidden sm:flex items-center bg-gray-100 rounded-lg px-3 py-2 w-56 md:w-72 mr-4"> 
+            <div className="hidden sm:flex items-center bg-gray-100 rounded-lg px-3 py-2 w-56 md:w-72 mr-4">
               <FiSearch className="text-gray-400 mr-2" size={18} />
               <input
                 type="text"
@@ -175,10 +175,10 @@ const AdminDashboard = ({ onLogout }) => {
             {/* Notification Icon */}
             <div className="relative cursor-pointer mr-6">
               <IoMdNotificationsOutline className="text-gray-500 hover:text-gray-700" size={24} sm:size={26} />
-              <span className="absolute top-0 right-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border border-white"></span> 
+              <span className="absolute top-0 right-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border border-white"></span>
             </div>
 
-            <button 
+            <button
               onClick={onLogout}
               className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
               title="Logout"
@@ -204,7 +204,7 @@ const AdminDashboard = ({ onLogout }) => {
             <Route path="/notifications" element={<NotificationsContent />} />
             <Route path="/settings" element={<SettingsContent />} />
             <Route path="/transactions" element={<TransactionsContent />} />
-            <Route path="/car-report" element={<CarReportContent />} />
+            {/* <Route path="/car-report" element={<CarReportContent />} /> */}
             <Route path="/support" element={<SupportContent />} />
             <Route path="/rides" element={<RidesContent />} />
             <Route path="/partners/*" element={<PartnersContent />} />

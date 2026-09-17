@@ -17,8 +17,6 @@ const TodayTag = () => (
 
 const DropContent = () => {
     const [activeTab, setActiveTab] = useState('All riders');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [ridersData, setRidersData] = useState(null);
 
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
