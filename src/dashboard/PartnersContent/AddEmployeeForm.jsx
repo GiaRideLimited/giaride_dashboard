@@ -6,7 +6,6 @@ const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId: propOrganiz
     const params = useParams();
     const organizationId = propOrganizationId || params.id;
     console.log("organizationId ", organizationId)
-    // 1. State for form data matching API structure
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
@@ -34,11 +33,9 @@ const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId: propOrganiz
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-
-        // Prepare payload exactly as shown in Postman
         const payload = {
             ...formData,
-            organization_id: organizationId // Passed as prop or defaulted to 8 (from screenshot)
+            organization_id: organizationId
         };
 
         try {
@@ -46,7 +43,7 @@ const AddEmployeeForm = ({ onBack, onBackToPartners, organizationId: propOrganiz
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${token}` // Uncomment if auth is needed
+                    // 'Authorization': `Bearer ${token}` 
                 },
                 body: JSON.stringify(payload)
             });
