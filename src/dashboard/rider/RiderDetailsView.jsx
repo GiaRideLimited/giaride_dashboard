@@ -15,6 +15,7 @@ import {
 import { BsCarFront } from 'react-icons/bs';
 import { BsThreeDots } from 'react-icons/bs';
 import EditRiderModal from './EditRiderModal';
+import RiderDocumentsTab from './RiderDocumentsTab';
 
 const tabs = ['Other Details', 'Ride History', 'Earnings History', 'Documents'];
 
@@ -70,7 +71,6 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
                     return response.json();
                 })
                 .then((jsonData) => {
-                    // Adjusting for potential nesting seen in other components
                     const history = jsonData?.data?.data || jsonData?.data || jsonData || [];
                     setRideHistory(Array.isArray(history) ? history : []);
                     setIsHistoryLoading(false);
@@ -107,30 +107,30 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
         const isActive = rider.status === 'active';
         const action = isActive ? 'deactivate' : 'activate';
         if (!window.confirm(`Are you sure you want to ${action} this rider?`)) return;
-        
+
         setIsActionLoading(true);
         const endpoint = `${BASE_URL}/admin/update-rider-status/${reference}`;
-        
+
         fetch(endpoint, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: !isActive })
         })
-        .then(response => {
-            if (!response.ok) throw new Error(`Failed to ${action} rider`);
-            return response.json();
-        })
-        .then(() => {
-            alert(`Rider ${action}d successfully`);
-            fetchRiderDetails(); // Refresh data
-        })
-        .catch(err => {
-            console.error(`${action} error:`, err);
-            alert(err.message);
-        })
-        .finally(() => {
-            setIsActionLoading(false);
-        });
+            .then(response => {
+                if (!response.ok) throw new Error(`Failed to ${action} rider`);
+                return response.json();
+            })
+            .then(() => {
+                alert(`Rider ${action}d successfully`);
+                fetchRiderDetails(); // Refresh data
+            })
+            .catch(err => {
+                console.error(`${action} error:`, err);
+                alert(err.message);
+            })
+            .finally(() => {
+                setIsActionLoading(false);
+            });
     };
 
     // Helper for Status Dots in Ride History
@@ -168,7 +168,7 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
     return (
         <div className="bg-white min-h-screen p-6 sm:p-10 font-sans animate-fade-in text-gray-800">
             {/* Back Button */}
-            <button 
+            <button
                 onClick={onBack}
                 className="mb-8 flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors cursor-pointer group"
             >
@@ -197,18 +197,18 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                    <button 
+                    <button
                         onClick={handleToggleStatus}
                         disabled={isActionLoading}
                         className={`flex-1 md:flex-none px-6 py-2.5 border rounded-full text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
-                            ${rider.status === 'active' 
-                                ? 'text-red-600 border-red-100 hover:bg-red-50' 
+                            ${rider.status === 'active'
+                                ? 'text-red-600 border-red-100 hover:bg-red-50'
                                 : 'text-green-600 border-green-100 hover:bg-green-50'}
                         `}
                     >
                         {isActionLoading ? 'Processing...' : rider.status === 'active' ? 'Deactivate Rider' : 'Activate Rider'}
                     </button>
-                    <button 
+                    <button
                         onClick={() => setIsEditModalOpen(true)}
                         className="flex-1 md:flex-none px-6 py-2.5 bg-black text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer"
                     >
@@ -459,55 +459,12 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
                     )}
 
                     {activeTab === 'Documents' && (
-                        <div className="flex flex-col gap-6">
-                            <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                <div>
-                                    <h3 className="text-sm font-bold text-gray-800">Document Status</h3>
-                                    <p className="text-xs text-gray-500">Overall verification status of documents</p>
-                                </div>
-                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                                    rider.document_status === 'approved' || rider.verified 
-                                    ? 'bg-green-100 text-green-700' 
-                                    : rider.document_status === 'declined'
-                                    ? 'bg-red-100 text-red-700'
-                                    : 'bg-yellow-100 text-yellow-700'
-                                }`}>
-                                    {rider.document_status || (rider.verified ? 'Approved' : 'Pending/Unverified')}
-                                </span>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {[
-                                    { label: 'Selfie Image', key: 'selfie_image' },
-                                    { label: 'Driver License (Front)', key: 'driver_license_front' },
-                                    { label: 'Driver License (Back)', key: 'driver_license_back' },
-                                    { label: 'Vehicle Insurance', key: 'vehicle_insurance' },
-                                    { label: 'Road Worthiness', key: 'vehicle_road_worthiness' },
-                                    { label: 'ID Card (Front)', key: 'id_card_front' },
-                                    { label: 'ID Card (Back)', key: 'id_card_back' },
-                                    { label: 'Rider/Driver Card', key: 'rider_driver_card' },
-                                ].map((doc, idx) => (
-                                    <div key={idx} className="border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col">
-                                        <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-                                            <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">{doc.label}</span>
-                                        </div>
-                                        <div className="p-4 flex-grow flex items-center justify-center bg-gray-50/30 min-h-[160px]">
-                                            {rider[doc.key] ? (
-                                                <a href={rider[doc.key]} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                                                    <img 
-                                                        src={rider[doc.key]} 
-                                                        alt={doc.label} 
-                                                        className="w-full h-40 object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer border border-gray-200" 
-                                                    />
-                                                </a>
-                                            ) : (
-                                                <span className="text-sm text-gray-400 font-medium">Not uploaded</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        <RiderDocumentsTab
+                            reference={reference}
+                            rider={rider}
+                            BASE_URL={BASE_URL}
+                            onRiderRefresh={fetchRiderDetails}
+                        />
                     )}
 
                     {activeTab !== 'Ride History' && activeTab !== 'Other Details' && activeTab !== 'Earnings History' && activeTab !== 'Documents' && (
@@ -519,11 +476,11 @@ const RiderDetailsView = ({ reference: propReference, onBack }) => {
             </div>
 
             {/* Edit Modal */}
-            <EditRiderModal 
-                isOpen={isEditModalOpen} 
-                onClose={() => setIsEditModalOpen(false)} 
-                rider={rider} 
-                onUpdateSuccess={fetchRiderDetails} 
+            <EditRiderModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                rider={rider}
+                onUpdateSuccess={fetchRiderDetails}
             />
         </div>
     );
