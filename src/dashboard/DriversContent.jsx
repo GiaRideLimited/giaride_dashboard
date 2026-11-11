@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { TbFilter } from "react-icons/tb";
 import { IoMdAdd } from "react-icons/io";
@@ -10,11 +10,37 @@ import {
   FiPauseCircle,
   FiBell,
   FiCopy,
+  FiX,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
 import AddDriverModal from "./AddDriverModal";
 import DriverDetailsView from "./driver/DriverDetailsView";
+
+const PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 400;
+
+// Tab label -> backend `status` value (null = no status filter)
+const STATUS_TABS = [
+  { label: "All drivers", status: null },
+  { label: "Active", status: "active" },
+  { label: "Pending", status: "inactive" }, // backend uses "inactive" for pending drivers
+  { label: "Suspended", status: "suspended" },
+  { label: "Deleted", status: "deleted" },
+];
+
+const statusBadgeClass = (status) => {
+  switch (status) {
+    case "active":
+      return "bg-green-100 text-green-700";
+    case "suspended":
+      return "bg-yellow-100 text-yellow-700";
+    case "deleted":
+      return "bg-red-100 text-red-600";
+    default:
+      return "bg-gray-100 text-gray-500";
+  }
+};
 
 const TodayTag = () => (
   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -23,7 +49,7 @@ const TodayTag = () => (
 );
 
 const DriversContent = () => {
-  const [activeTab, setActiveTab] = useState("All drivers");
+  const [activeStatus, setActiveStatus] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [driversList, setDriversList] = useState([]);
@@ -35,7 +61,13 @@ const DriversContent = () => {
   const [error, setError] = useState(null);
   const [driversStats, setDriversStats] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  // searchInput updates on every keystroke; searchTerm updates after the user stops typing
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+
+  const abortRef = useRef(null);
+  const navigate = useNavigate();
 
   const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -48,50 +80,72 @@ const DriversContent = () => {
     return () => window.removeEventListener("click", handleClickOutside);
   }, [openDropdownId]);
 
-  // --- Fetch Drivers with Pagination ---
-  const fetchDrivers = useCallback(
-    (page = 1) => {
-      setIsLoading(true);
-      setError(null);
-      const token = localStorage.getItem("token");
+  // Debounce the search box so we don't hit the API on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const trimmed = searchInput.trim();
+      if (trimmed !== searchTerm) {
+        setSearchTerm(trimmed);
+        setCurrentPage(1);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput, searchTerm]);
 
-      const endpoint = `${BASE_URL}/admin/drivers?page=${page}`;
+  // --- Fetch Drivers (search, status and pagination handled by the backend) ---
+  const fetchDrivers = useCallback(() => {
+    // Cancel any request still in flight so an older response can't overwrite a newer one
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-      fetch(endpoint, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    setIsLoading(true);
+    setError(null);
+    const token = localStorage.getItem("token");
+
+    const params = new URLSearchParams({
+      page: String(currentPage),
+      size: String(PAGE_SIZE),
+    });
+    if (searchTerm) params.set("search", searchTerm);
+    if (activeStatus) params.set("status", activeStatus);
+
+    fetch(`${BASE_URL}/admin/drivers?${params}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        return response.json();
       })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Server responded with ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((jsonData) => {
-          const extractedDriversArray = jsonData?.data?.data || [];
-          setDriversList(extractedDriversArray);
-
-          setTotalPages(jsonData?.data?.totalPages || 1);
-          setCurrentPage(jsonData?.data?.currentPage || 1);
-          setTotalDrivers(jsonData?.data?.total || 0);
-
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          console.error("Fetch error:", err);
-          setError(err.message || "Unknown error");
-          setIsLoading(false);
-        });
-    },
-    [BASE_URL],
-  );
+      .then((jsonData) => {
+        const payload = jsonData?.data || {};
+        setDriversList(Array.isArray(payload.data) ? payload.data : []);
+        setTotalPages(Math.max(payload.totalPages || 1, 1));
+        setTotalDrivers(payload.total || 0);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        console.error("Fetch error:", err);
+        setError(err.message || "Unknown error");
+        setDriversList([]);
+        setIsLoading(false);
+      });
+  }, [BASE_URL, currentPage, searchTerm, activeStatus]);
 
   useEffect(() => {
-    fetchDrivers(currentPage);
-  }, [currentPage, fetchDrivers]);
+    fetchDrivers();
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, [fetchDrivers]);
 
   // --- Fetch Drivers Stats ---
   useEffect(() => {
@@ -120,10 +174,21 @@ const DriversContent = () => {
   }, [BASE_URL]);
 
   const entityTypeForModal = "Driver";
-  const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, "Pending"];
+
+  const handleTabChange = (status) => {
+    if (status === activeStatus) return;
+    setActiveStatus(status);
+    setCurrentPage(1);
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
 
   const handleAddDriverSubmit = () => {
-    fetchDrivers(currentPage);
+    fetchDrivers();
     setIsModalOpen(false);
     toast.success("Driver added successfully!");
   };
@@ -133,7 +198,7 @@ const DriversContent = () => {
     const action = isActive ? "deactivate" : "activate";
     if (
       !window.confirm(
-        `Are you sure you want to ${action} ${firstName}'s account?`,
+        `Are you sure you want to ${action} ${firstName || "this driver"}'s account?`,
       )
     )
       return;
@@ -155,7 +220,7 @@ const DriversContent = () => {
           return response.json();
         })
         .then(() => {
-          fetchDrivers(currentPage);
+          fetchDrivers();
         }),
       {
         loading: `${action === "activate" ? "Activating" : "Deactivating"} driver...`,
@@ -165,8 +230,6 @@ const DriversContent = () => {
     );
   };
 
-  const navigate = useNavigate();
-
   const handlePreviousPage = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
@@ -174,6 +237,12 @@ const DriversContent = () => {
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
+
+  const emptyMessage = searchTerm
+    ? `No drivers match "${searchTerm}".`
+    : activeStatus
+      ? `No ${activeStatus === "inactive" ? "pending" : activeStatus} drivers.`
+      : "No drivers found.";
 
   const listView = (
     <div className="text-gray-800 relative animate-fade-in">
@@ -221,15 +290,24 @@ const DriversContent = () => {
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg mt-8 min-h-screen flex flex-col">
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-3">
-          <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 w-full sm:w-[26%] bg-gray-50">
-            <TbFilter size={20} className="text-gray-500 mr-2" />
+          <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 w-full sm:w-[32%] bg-gray-50">
+            <TbFilter size={20} className="text-gray-500 mr-2 shrink-0" />
             <input
               type="text"
-              placeholder={`Filter ${entityTypeForModal.toLowerCase()}s by name, ID, status`}
+              placeholder="Search by name, reference, email or phone"
               className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
+            {searchInput && (
+              <button
+                onClick={clearSearch}
+                className="text-gray-400 hover:text-gray-700 ml-2 cursor-pointer"
+                title="Clear search"
+              >
+                <FiX size={16} />
+              </button>
+            )}
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -240,20 +318,20 @@ const DriversContent = () => {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
+        {/* Status Tabs */}
+        <div className="border-b border-gray-200 overflow-x-auto">
           <nav className="flex space-x-6 -mb-px" aria-label="Tabs">
-            {tabs.map((tab) => (
+            {STATUS_TABS.map((tab) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium transition-colors
-                                    ${activeTab === tab
+                key={tab.label}
+                onClick={() => handleTabChange(tab.status)}
+                className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium transition-colors cursor-pointer
+                                    ${activeStatus === tab.status
                     ? "border-neutral-800 text-neutral-900"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
               >
-                {tab}
+                {tab.label}
               </button>
             ))}
           </nav>
@@ -308,215 +386,183 @@ const DriversContent = () => {
                     Error: {error}
                   </td>
                 </tr>
+              ) : driversList.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-10 text-gray-500">
+                    {emptyMessage}
+                  </td>
+                </tr>
               ) : (
-                (() => {
-                  const filteredDrivers = driversList.filter((driver) => {
-                    // Filter by Tab
-                    if (activeTab === "Pending" && driver.status !== "pending")
-                      return false;
-
-                    // Filter by Search Term
-                    if (!searchTerm) return true;
-                    const searchLower = searchTerm.toLowerCase();
-                    const fullName =
-                      `${driver.first_name || ""} ${driver.last_name || ""}`.toLowerCase();
-                    return (
-                      fullName.includes(searchLower) ||
-                      (driver.reference &&
-                        driver.reference.toLowerCase().includes(searchLower)) ||
-                      (driver.status &&
-                        driver.status.toLowerCase().includes(searchLower)) ||
-                      (driver.car_number_plate &&
-                        driver.car_number_plate
-                          .toLowerCase()
-                          .includes(searchLower)) ||
-                      (driver.city &&
-                        driver.city.toLowerCase().includes(searchLower)) ||
-                      (driver.gender &&
-                        driver.gender.toLowerCase().includes(searchLower))
-                    );
-                  });
-
-                  if (filteredDrivers.length === 0) {
-                    return (
-                      <tr>
-                        <td
-                          colSpan="8"
-                          className="text-center py-10 text-gray-500"
-                        >
-                          No drivers found.
-                        </td>
-                      </tr>
-                    );
-                  }
-
-                  return filteredDrivers.map((driver, index) => {
-                    return (
-                      <tr
-                        key={driver.id}
-                        className="group bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
-                        onClick={() => navigate(`/drivers/${driver.reference}`)}
-                      >
-                        <td className="px-4 py-4 font-medium text-gray-700">
-                          <div className="flex items-center gap-2">
-                            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                              {driver.reference || "--"}
-                            </span>
-                            {driver.reference && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(driver.reference);
-                                  toast.success("Reference copied!");
-                                }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
-                                title="Copy Reference"
-                              >
-                                <FiCopy size={14} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center">
-                            <img
-                              className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm"
-                              src={
-                                driver?.selfie_image ||
-                                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"
-                              }
-                              alt="driver"
-                            />
-                            <span className="font-medium text-gray-900">
-                              {driver.first_name || driver.last_name
-                                ? `${driver.first_name || ""} ${driver.last_name || ""}`
-                                : driver.username || ""}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 capitalize">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${driver.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
-                          >
-                            {driver.status || "unknown"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 capitalize text-gray-600">
-                          {driver.gender || "--"}
-                        </td>
-                        <td className="px-4 py-4 text-gray-600">
-                          {driver.city || "--"}
-                        </td>
-                        <td className="px-4 py-4 font-medium text-gray-900 text-right">
-                          ₦{Number(driver.total_credits || 0).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-4 text-gray-500 whitespace-nowrap">
-                          {driver.created_at ? new Date(driver.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '--'}
-                        </td>
-                        <td className="px-4 py-4 text-center relative">
+                driversList.map((driver) => (
+                  <tr
+                    key={driver.id}
+                    className="group bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/drivers/${driver.reference}`)}
+                  >
+                    <td className="px-4 py-4 font-medium text-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                          {driver.reference || "--"}
+                        </span>
+                        {driver.reference && (
                           <button
-                            className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setOpenDropdownId(
-                                openDropdownId === driver.id ? null : driver.id,
-                              );
+                              navigator.clipboard.writeText(driver.reference);
+                              toast.success("Reference copied!");
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
+                            title="Copy Reference"
+                          >
+                            <FiCopy size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center">
+                        <img
+                          className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm"
+                          src={
+                            driver?.selfie_image ||
+                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"
+                          }
+                          alt="driver"
+                        />
+                        <span className="font-medium text-gray-900">
+                          {driver.first_name || driver.last_name
+                            ? `${driver.first_name || ""} ${driver.last_name || ""}`
+                            : driver.username || ""}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 capitalize">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadgeClass(driver.status)}`}
+                      >
+                        {driver.status || "unknown"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 capitalize text-gray-600">
+                      {driver.gender || "--"}
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      {driver.city || "--"}
+                    </td>
+                    <td className="px-4 py-4 font-medium text-gray-900 text-right">
+                      ₦{Number(driver.total_credits || 0).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4 text-gray-500 whitespace-nowrap">
+                      {driver.created_at
+                        ? new Date(driver.created_at).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
+                        : "--"}
+                    </td>
+                    <td className="px-4 py-4 text-center relative">
+                      <button
+                        className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdownId(
+                            openDropdownId === driver.id ? null : driver.id,
+                          );
+                        }}
+                      >
+                        <BsThreeDotsVertical size={18} />
+                      </button>
+
+                      {openDropdownId === driver.id && (
+                        <div
+                          className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            onClick={() => {
+                              navigate(`/drivers/${driver.reference}`);
+                              setOpenDropdownId(null);
                             }}
                           >
-                            <BsThreeDotsVertical size={18} />
+                            <FiEye size={16} className="text-gray-400" />
+                            View Profile
                           </button>
-
-                          {openDropdownId === driver.id && (
-                            <div
-                              className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                onClick={() => {
-                                  navigate(`/drivers/${driver.reference}`);
-                                  setOpenDropdownId(null);
-                                }}
-                              >
-                                <FiEye size={16} className="text-gray-400" />
-                                View Profile
-                              </button>
-                              <button
-                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                onClick={() => {
-                                  handleStatusUpdate(
-                                    driver.reference,
-                                    driver.status,
-                                    driver.first_name,
-                                  );
-                                  setOpenDropdownId(null);
-                                }}
-                              >
-                                <FiPauseCircle
-                                  size={16}
-                                  className={
-                                    driver.status === "active"
-                                      ? "text-red-400"
-                                      : "text-green-400"
-                                  }
-                                />
-                                {driver.status === "active"
-                                  ? "Deactivate Account"
-                                  : "Activate Account"}
-                              </button>
-                              <div className="border-t border-gray-50 my-1"></div>
-                              <button
-                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                onClick={() => {
-                                  toast.success(
-                                    `Sending notification to ${driver.first_name}`,
-                                  );
-                                  setOpenDropdownId(null);
-                                }}
-                              >
-                                <FiBell size={16} className="text-gray-400" />
-                                Send Notifications
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  });
-                })()
+                          <button
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            onClick={() => {
+                              handleStatusUpdate(
+                                driver.reference,
+                                driver.status,
+                                driver.first_name,
+                              );
+                              setOpenDropdownId(null);
+                            }}
+                          >
+                            <FiPauseCircle
+                              size={16}
+                              className={
+                                driver.status === "active"
+                                  ? "text-red-400"
+                                  : "text-green-400"
+                              }
+                            />
+                            {driver.status === "active"
+                              ? "Deactivate Account"
+                              : "Activate Account"}
+                          </button>
+                          <div className="border-t border-gray-50 my-1"></div>
+                          <button
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            onClick={() => {
+                              toast.success(
+                                `Sending notification to ${driver.first_name || "driver"}`,
+                              );
+                              setOpenDropdownId(null);
+                            }}
+                          >
+                            <FiBell size={16} className="text-gray-400" />
+                            Send Notifications
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination Controls */}
-        {!isLoading && totalPages > 1 && (
+        {!isLoading && !error && totalDrivers > 0 && (
           <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-100 gap-4">
             <span className="text-sm text-gray-500">
               Showing page{" "}
               <span className="font-medium text-gray-900">{currentPage}</span>{" "}
               of <span className="font-medium text-gray-900">{totalPages}</span>{" "}
-              ({totalDrivers} total drivers)
+              ({totalDrivers} {searchTerm || activeStatus ? "matching" : "total"} drivers)
             </span>
 
-            <div className="flex gap-2">
-              <button
-                onClick={handlePreviousPage}
-                disabled={currentPage === 1}
-                className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
-              >
-                <FiChevronLeft size={16} />
-                {/* Previous */}
-              </button>
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
-              >
-                {/* Next */}
-                <FiChevronRight size={16} />
-              </button>
-            </div>
+            {totalPages > 1 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
+                >
+                  <FiChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
+                >
+                  <FiChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -533,7 +579,10 @@ const DriversContent = () => {
   return (
     <Routes>
       <Route index element={listView} />
-      <Route path=":reference" element={<DriverDetailsView onBack={() => navigate('/drivers')} />} />
+      <Route
+        path=":reference"
+        element={<DriverDetailsView onBack={() => navigate("/drivers")} />}
+      />
     </Routes>
   );
 };

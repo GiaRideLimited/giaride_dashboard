@@ -1,14 +1,37 @@
-// src/components/RidersContent.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { TbFilter } from 'react-icons/tb';
 import { IoMdAdd } from 'react-icons/io';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { FiChevronLeft, FiChevronRight, FiEye, FiPauseCircle, FiBell, FiCopy } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiEye, FiPauseCircle, FiBell, FiCopy, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import AddDriverModal from './AddDriverModal';
 import RiderDetailsView from './rider/RiderDetailsView';
+
+const PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 400;
+
+const STATUS_TABS = [
+    { label: 'All riders', status: null },
+    { label: 'Active', status: 'active' },
+    { label: 'Pending', status: 'inactive' },
+    { label: 'Suspended', status: 'suspended' },
+    { label: 'Deleted', status: 'deleted' },
+];
+
+const statusBadgeClass = (status) => {
+    switch (status) {
+        case 'active':
+            return 'bg-green-100 text-green-700';
+        case 'suspended':
+            return 'bg-yellow-100 text-yellow-700';
+        case 'deleted':
+            return 'bg-red-100 text-red-600';
+        default:
+            return 'bg-gray-100 text-gray-500';
+    }
+};
 
 const TodayTag = () => (
     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -17,10 +40,10 @@ const TodayTag = () => (
 );
 
 const RidersContent = () => {
-    const [activeTab, setActiveTab] = useState('All riders');
+    const [activeStatus, setActiveStatus] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const [data, setData] = useState(null);
+    const [ridersList, setRidersList] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRiders, setTotalRiders] = useState(0);
@@ -29,7 +52,13 @@ const RidersContent = () => {
     const [error, setError] = useState(null);
     const [ridersStats, setRidersStats] = useState(null);
     const [openDropdownId, setOpenDropdownId] = useState(null);
+
+    // searchInput updates on every keystroke; searchTerm updates after the user stops typing
+    const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+
+    const abortRef = useRef(null);
+    const navigate = useNavigate();
 
     const BASE_URL = import.meta.env.VITE_REACT_ENDPOINT;
 
@@ -42,19 +71,43 @@ const RidersContent = () => {
         return () => window.removeEventListener('click', handleClickOutside);
     }, [openDropdownId]);
 
-    const fetchRiders = useCallback((page = 1) => {
+    // Debounce the search box so we don't hit the API on every keystroke
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const trimmed = searchInput.trim();
+            if (trimmed !== searchTerm) {
+                setSearchTerm(trimmed);
+                setCurrentPage(1);
+            }
+        }, SEARCH_DEBOUNCE_MS);
+        return () => clearTimeout(timer);
+    }, [searchInput, searchTerm]);
+
+    // --- Fetch Riders (search, status and pagination handled by the backend) ---
+    const fetchRiders = useCallback(() => {
+        // Cancel any request still in flight so an older response can't overwrite a newer one
+        if (abortRef.current) abortRef.current.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
         setIsLoading(true);
         setError(null);
         const token = localStorage.getItem('token');
 
-        const endpoint = `${BASE_URL}/admin/riders?page=${page}`;
+        const params = new URLSearchParams({
+            page: String(currentPage),
+            size: String(PAGE_SIZE),
+        });
+        if (searchTerm) params.set('search', searchTerm);
+        if (activeStatus) params.set('status', activeStatus);
 
-        fetch(endpoint, {
+        fetch(`${BASE_URL}/admin/riders?${params}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
-            }
+            },
+            signal: controller.signal,
         })
             .then((response) => {
                 if (!response.ok) {
@@ -63,24 +116,29 @@ const RidersContent = () => {
                 return response.json();
             })
             .then((jsonData) => {
-                setData(jsonData);
-
-                setTotalPages(jsonData?.data?.totalPages || 1);
-                setCurrentPage(jsonData?.data?.currentPage || 1);
-                setTotalRiders(jsonData?.data?.total || 0);
-
+                const payload = jsonData?.data || {};
+                setRidersList(Array.isArray(payload.data) ? payload.data : []);
+                setTotalPages(Math.max(payload.totalPages || 1, 1));
+                setTotalRiders(payload.total || 0);
                 setIsLoading(false);
             })
             .catch((err) => {
+                if (err.name === 'AbortError') return;
                 console.error("Fetch error:", err);
                 setError(err.message || "Unknown error");
+                setRidersList([]);
                 setIsLoading(false);
             });
-    }, [BASE_URL]);
+    }, [BASE_URL, currentPage, searchTerm, activeStatus]);
 
     useEffect(() => {
-        fetchRiders(currentPage);
-    }, [currentPage, fetchRiders]);
+        fetchRiders();
+        return () => {
+            if (abortRef.current) abortRef.current.abort();
+        };
+    }, [fetchRiders]);
+
+    // --- Fetch Riders Stats ---
     useEffect(() => {
         const token = localStorage.getItem('token');
         const endpoint = `${BASE_URL}/admin/riders-stats`;
@@ -107,10 +165,21 @@ const RidersContent = () => {
     }, [BASE_URL]);
 
     const entityTypeForModal = "Rider";
-    const tabs = [`All ${entityTypeForModal.toLowerCase()}s`, 'Pending'];
+
+    const handleTabChange = (status) => {
+        if (status === activeStatus) return;
+        setActiveStatus(status);
+        setCurrentPage(1);
+    };
+
+    const clearSearch = () => {
+        setSearchInput('');
+        setSearchTerm('');
+        setCurrentPage(1);
+    };
 
     const handleAddRiderSubmit = () => {
-        fetchRiders(currentPage);
+        fetchRiders();
         setIsModalOpen(false);
         toast.success("Rider added successfully!");
     };
@@ -118,7 +187,7 @@ const RidersContent = () => {
     const handleStatusUpdate = (reference, currentStatus, firstName) => {
         const isActive = currentStatus === 'active';
         const action = isActive ? 'deactivate' : 'activate';
-        if (!window.confirm(`Are you sure you want to ${action} ${firstName}'s account?`)) return;
+        if (!window.confirm(`Are you sure you want to ${action} ${firstName || 'this rider'}'s account?`)) return;
 
         const token = localStorage.getItem('token');
         const endpoint = `${BASE_URL}/admin/update-rider-status/${reference}`;
@@ -132,10 +201,10 @@ const RidersContent = () => {
                 },
                 body: JSON.stringify({ status: !isActive })
             }).then(response => {
-                if (!response.ok) throw new new Error(`Failed to ${action} rider`);
+                if (!response.ok) throw new Error(`Failed to ${action} rider`);
                 return response.json();
             }).then(() => {
-                fetchRiders(currentPage);
+                fetchRiders();
             }),
             {
                 loading: `${action === 'activate' ? 'Activating' : 'Deactivating'} rider...`,
@@ -145,7 +214,6 @@ const RidersContent = () => {
         );
     };
 
-    const navigate = useNavigate();
     const handlePreviousPage = () => {
         if (currentPage > 1) setCurrentPage(prev => prev - 1);
     };
@@ -154,7 +222,11 @@ const RidersContent = () => {
         if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
     };
 
-    const ridersList = data?.data?.data && Array.isArray(data.data.data) ? data.data.data : [];
+    const emptyMessage = searchTerm
+        ? `No riders match "${searchTerm}".`
+        : activeStatus
+            ? `No ${activeStatus === 'inactive' ? 'pending' : activeStatus} riders.`
+            : 'No riders found.';
 
     const listView = (
         <div className="text-gray-800 relative animate-fade-in">
@@ -189,38 +261,48 @@ const RidersContent = () => {
             {/* Table Section */}
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg mt-8 min-h-screen flex flex-col">
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-3">
-                    <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 w-full sm:w-auto max-w-xs sm:max-w-sm bg-gray-50">
-                        <TbFilter size={20} className="text-gray-500 mr-2" />
+                    <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 w-full sm:w-[32%] bg-gray-50">
+                        <TbFilter size={20} className="text-gray-500 mr-2 shrink-0" />
                         <input
                             type="text"
-                            placeholder={`Filter ${entityTypeForModal.toLowerCase()}s by name, ID, status`}
+                            placeholder="Search by name, reference, email or phone"
                             className="text-sm placeholder-gray-400 outline-none flex-grow bg-transparent"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
                         />
+                        {searchInput && (
+                            <button
+                                onClick={clearSearch}
+                                className="text-gray-400 hover:text-gray-700 ml-2 cursor-pointer"
+                                title="Clear search"
+                            >
+                                <FiX size={16} />
+                            </button>
+                        )}
                     </div>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-semibold px-[24px] py-[8px] rounded-full flex items-center justify-center w-full sm:w-auto transition-colors cursor-pointer shadow-sm"
                     >
                         <IoMdAdd size={20} className="mr-1.5" />
-                        Add {entityTypeForModal}s
+                        Add {entityTypeForModal}
                     </button>
                 </div>
 
-                <div className=" border-b border-gray-200">
+                {/* Status Tabs */}
+                <div className="border-b border-gray-200 overflow-x-auto">
                     <nav className="flex space-x-6 -mb-px" aria-label="Tabs">
-                        {tabs.map((tab) => (
+                        {STATUS_TABS.map((tab) => (
                             <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium transition-colors
-                                    ${activeTab === tab
+                                key={tab.label}
+                                onClick={() => handleTabChange(tab.status)}
+                                className={`whitespace-nowrap pb-3 px-1 border-b-2 text-sm font-medium transition-colors cursor-pointer
+                                    ${activeStatus === tab.status
                                         ? 'border-neutral-800 text-neutral-900'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
-                                {tab}
+                                {tab.label}
                             </button>
                         ))}
                     </nav>
@@ -257,173 +339,149 @@ const RidersContent = () => {
                                         Error: {error}
                                     </td>
                                 </tr>
-                            ) : (() => {
-                                const filteredRiders = ridersList.filter(rider => {
-                                    // Filter by Tab
-                                    if (activeTab === 'Pending' && rider.status !== 'pending') return false;
-
-                                    // Filter by Search Term
-                                    if (!searchTerm) return true;
-                                    const searchLower = searchTerm.toLowerCase();
-                                    const fullName = `${rider.first_name || ''} ${rider.last_name || ''}`.toLowerCase();
-                                    return (
-                                        fullName.includes(searchLower) ||
-                                        (rider.reference && rider.reference.toLowerCase().includes(searchLower)) ||
-                                        (rider.status && rider.status.toLowerCase().includes(searchLower)) ||
-                                        (rider.car_number_plate && rider.car_number_plate.toLowerCase().includes(searchLower)) ||
-                                        (rider.city && rider.city.toLowerCase().includes(searchLower)) ||
-                                        (rider.gender && rider.gender.toLowerCase().includes(searchLower))
-                                    );
-                                });
-
-                                if (filteredRiders.length === 0) {
-                                    return (
-                                        <tr>
-                                            <td colSpan="8" className="text-center py-10 text-gray-500">
-                                                No riders found.
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-
-                                return filteredRiders.map((rider, index) => {
-                                    const itemNumber = (currentPage - 1) * 10 + index + 1;
-
-                                    return (
-                                        <tr
-                                            key={rider.id}
-                                            className="group bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
-                                            onClick={() => navigate(`/riders/${rider.reference}`)}
-                                        >
-                                            <td className="px-4 py-4 font-medium text-gray-700">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                                                        {rider.reference || '--'}
-                                                    </span>
-                                                    {rider.reference && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigator.clipboard.writeText(rider.reference);
-                                                                toast.success("Reference copied!");
-                                                            }}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
-                                                            title="Copy Reference"
-                                                        >
-                                                            <FiCopy size={14} />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <div className="flex items-center">
-                                                    <img
-                                                        className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm"
-                                                        src={rider?.selfie_image || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"}
-                                                        alt="rider"
-                                                    />
-                                                    <span className="font-medium text-gray-900">
-                                                        {rider.first_name || rider.last_name
-                                                            ? `${rider.first_name || ''} ${rider.last_name || ''}`
-                                                            : rider.username || '--'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 capitalize">
-                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${rider.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                                                    {rider.status || 'unknown'}
+                            ) : ridersList.length === 0 ? (
+                                <tr>
+                                    <td colSpan="8" className="text-center py-10 text-gray-500">
+                                        {emptyMessage}
+                                    </td>
+                                </tr>
+                            ) : (
+                                ridersList.map((rider) => (
+                                    <tr
+                                        key={rider.id}
+                                        className="group bg-white border-b border-gray-50 hover:bg-gray-50/80 cursor-pointer transition-colors"
+                                        onClick={() => navigate(`/riders/${rider.reference}`)}
+                                    >
+                                        <td className="px-4 py-4 font-medium text-gray-700">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                                                    {rider.reference || '--'}
                                                 </span>
-                                            </td>
-                                            <td className="px-4 py-4 capitalize text-gray-600">{rider.gender || '--'}</td>
-                                            <td className="px-4 py-4 text-gray-600">{rider.city || '--'}</td>
-                                            <td className="px-4 py-4 font-medium text-gray-900 text-right">
-                                                ₦{Number(rider.total_credits || rider.total_debit || 0).toLocaleString()}
-                                            </td>
-                                            <td className="px-4 py-4 text-gray-500 whitespace-nowrap">
-                                                {rider.created_at ? new Date(rider.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '--'}
-                                            </td>
-                                            <td className="px-4 py-4 text-center relative">
-                                                <button
-                                                    className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setOpenDropdownId(openDropdownId === rider.id ? null : rider.id);
-                                                    }}
-                                                >
-                                                    <BsThreeDotsVertical size={18} />
-                                                </button>
-
-                                                {openDropdownId === rider.id && (
-                                                    <div
-                                                        className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
-                                                        onClick={(e) => e.stopPropagation()}
+                                                {rider.reference && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigator.clipboard.writeText(rider.reference);
+                                                            toast.success("Reference copied!");
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
+                                                        title="Copy Reference"
                                                     >
-                                                        <button
-                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                                            onClick={() => {
-                                                                navigate(`/riders/${rider.reference}`);
-                                                                setOpenDropdownId(null);
-                                                            }}
-                                                        >
-                                                            <FiEye size={16} className="text-gray-400" />
-                                                            View Profile
-                                                        </button>
-                                                        <button
-                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                                            onClick={() => {
-                                                                handleStatusUpdate(rider.reference, rider.status, rider.first_name);
-                                                                setOpenDropdownId(null);
-                                                            }}
-                                                        >
-                                                            <FiPauseCircle size={16} className={rider.status === 'active' ? "text-red-400" : "text-green-400"} />
-                                                            {rider.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
-                                                        </button>
-                                                        <div className="border-t border-gray-50 my-1"></div>
-                                                        <button
-                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                                            onClick={() => {
-                                                                toast.success(`Sending notification to ${rider.first_name}`);
-                                                                setOpenDropdownId(null);
-                                                            }}
-                                                        >
-                                                            <FiBell size={16} className="text-gray-400" />
-                                                            Send Notifications
-                                                        </button>
-                                                    </div>
+                                                        <FiCopy size={14} />
+                                                    </button>
                                                 )}
-                                            </td>
-                                        </tr>
-                                    );
-                                });
-                            })()}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="flex items-center">
+                                                <img
+                                                    className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm"
+                                                    src={rider?.selfie_image || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7csvPWMdfAHEAnhIRTdJKCK5SPK4cHfskow&s"}
+                                                    alt="rider"
+                                                />
+                                                <span className="font-medium text-gray-900">
+                                                    {rider.first_name || rider.last_name
+                                                        ? `${rider.first_name || ''} ${rider.last_name || ''}`
+                                                        : rider.username || '--'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 capitalize">
+                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadgeClass(rider.status)}`}>
+                                                {rider.status || 'unknown'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4 capitalize text-gray-600">{rider.gender || '--'}</td>
+                                        <td className="px-4 py-4 text-gray-600">{rider.city || '--'}</td>
+                                        <td className="px-4 py-4 font-medium text-gray-900 text-right">
+                                            ₦{Number(rider.total_credits || rider.total_debit || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-4 text-gray-500 whitespace-nowrap">
+                                            {rider.created_at ? new Date(rider.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '--'}
+                                        </td>
+                                        <td className="px-4 py-4 text-center relative">
+                                            <button
+                                                className="text-gray-400 hover:text-gray-900 p-1 transition-colors relative z-10"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenDropdownId(openDropdownId === rider.id ? null : rider.id);
+                                                }}
+                                            >
+                                                <BsThreeDotsVertical size={18} />
+                                            </button>
+
+                                            {openDropdownId === rider.id && (
+                                                <div
+                                                    className="absolute right-4 top-13 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 animate-fade-in"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <button
+                                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                        onClick={() => {
+                                                            navigate(`/riders/${rider.reference}`);
+                                                            setOpenDropdownId(null);
+                                                        }}
+                                                    >
+                                                        <FiEye size={16} className="text-gray-400" />
+                                                        View Profile
+                                                    </button>
+                                                    <button
+                                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                        onClick={() => {
+                                                            handleStatusUpdate(rider.reference, rider.status, rider.first_name);
+                                                            setOpenDropdownId(null);
+                                                        }}
+                                                    >
+                                                        <FiPauseCircle size={16} className={rider.status === 'active' ? "text-red-400" : "text-green-400"} />
+                                                        {rider.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
+                                                    </button>
+                                                    <div className="border-t border-gray-50 my-1"></div>
+                                                    <button
+                                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                        onClick={() => {
+                                                            toast.success(`Sending notification to ${rider.first_name || 'rider'}`);
+                                                            setOpenDropdownId(null);
+                                                        }}
+                                                    >
+                                                        <FiBell size={16} className="text-gray-400" />
+                                                        Send Notifications
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* --- PAGINATION CONTROLS --- */}
-                {!isLoading && totalPages > 1 && (
+                {!isLoading && !error && totalRiders > 0 && (
                     <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-100 gap-4">
                         <span className="text-sm text-gray-500">
                             Showing page <span className="font-medium text-gray-900">{currentPage}</span> of <span className="font-medium text-gray-900">{totalPages}</span>
-                            {' '}({totalRiders} total riders)
+                            {' '}({totalRiders} {searchTerm || activeStatus ? 'matching' : 'total'} riders)
                         </span>
 
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handlePreviousPage}
-                                disabled={currentPage === 1}
-                                className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
-                            >
-                                <FiChevronLeft size={16} />
-                            </button>
-                            <button
-                                onClick={handleNextPage}
-                                disabled={currentPage === totalPages}
-                                className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
-                            >
-                                <FiChevronRight size={16} />
-                            </button>
-                        </div>
+                        {totalPages > 1 && (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handlePreviousPage}
+                                    disabled={currentPage === 1}
+                                    className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
+                                >
+                                    <FiChevronLeft size={16} />
+                                </button>
+                                <button
+                                    onClick={handleNextPage}
+                                    disabled={currentPage === totalPages}
+                                    className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-gray-600 shadow-sm"
+                                >
+                                    <FiChevronRight size={16} />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
